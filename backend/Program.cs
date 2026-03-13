@@ -15,13 +15,13 @@ builder.Services.AddSingleton<IBotRepository, BotRepository>();
 builder.Services.AddSingleton<IDockerService, DockerService>();
 builder.Services.AddSingleton<ILogStreamingService, LogStreamingService>();
 
-// CORS for frontend
+// CORS for frontend — allow any origin (panel runs on local network)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000", "http://localhost:5173", "null")
+            .SetIsOriginAllowed(_ => true)  // Allow any origin (LAN access)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Required for SignalR
