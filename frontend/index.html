@@ -1609,34 +1609,29 @@ function simulateLogs(bot) {
 // LOG POLLING (replaces SignalR for simplicity)
 // ─────────────────────────────────────────────────────────────
 var logPollingInterval = null;
-var lastLogTimestamp = null;
+var seenLogTimestamps = new Set();
 
-function startLogPolling(botId, containerId) {
+function startLogPolling(botId) {
   stopLogPolling();
-  lastLogTimestamp = null;
+  seenLogTimestamps.clear();
   logPollingInterval = setInterval(async () => {
     try {
-      const url = lastLogTimestamp
-        ? `/api/bots/${botId}/logs?since=${encodeURIComponent(lastLogTimestamp)}`
-        : `/api/bots/${botId}/logs`;
-      const res = await fetch(url);
+      const res = await fetch(`/api/bots/${botId}/logs`);
       if (!res.ok) return;
       const data = await res.json();
-      if (!data.lines || data.lines.length === 0) return;
+      if (!data.lines) return;
       for (const line of data.lines) {
+        // Deduplicar por timestamp+texto
+        const key = (line.timestamp || '') + '|' + line.text;
+        if (seenLogTimestamps.has(key)) continue;
+        seenLogTimestamps.add(key);
         addLogLine(line.stream, line.text);
       }
-      if (data.lines.length > 0) {
-        lastLogTimestamp = data.lines[data.lines.length - 1].timestamp;
-      }
-      // Check if container stopped
       if (data.status === 'stopped' && selectedBot?.id === botId) {
         updateBotStatus(botId, 'stopped');
         stopLogPolling();
       }
-    } catch (e) {
-      // ignore polling errors
-    }
+    } catch (e) {}
   }, 1500);
 }
 
