@@ -1839,14 +1839,24 @@ async function saveCurrentFile() {
   if (!selectedBot) return;
   if (monacoEditor) fileContents[currentFile] = monacoEditor.getValue();
 
-  await apiCall('PUT', `/bots/${selectedBot.id}/files/${currentFile}`, {
-    content: fileContents[currentFile]
-  });
+  try {
+    const res = await fetch(`${API_BASE}/bots/${selectedBot.id}/files/${currentFile}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      // JSON.stringify maneja correctamente saltos de línea y caracteres especiales
+      body: JSON.stringify({ content: fileContents[currentFile] }),
+    });
 
-  savedContents[currentFile] = fileContents[currentFile];
-  updateSaveIndicator(false);
-  markFileTabModified(currentFile, false);
-  showToast('success', `${currentFile} saved`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    savedContents[currentFile] = fileContents[currentFile];
+    updateSaveIndicator(false);
+    markFileTabModified(currentFile, false);
+    showToast('success', `${currentFile} saved`);
+  } catch (e) {
+    showToast('error', `Error saving: ${e.message}`);
+    console.error('Save error:', e);
+  }
 }
 
 function updateSaveIndicator(unsaved) {
