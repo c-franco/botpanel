@@ -2060,17 +2060,18 @@ function startLogPolling(botId) {
   stopLogPolling();
   seenLogTimestamps.clear();
   logPollingInterval = setInterval(async () => {
+    // Si el usuario cambió de bot, cancelar este polling
+    if (selectedBot?.id !== botId) { stopLogPolling(); return; }
     try {
       const res = await fetch(`/api/bots/${botId}/logs`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.lines) return;
       for (const line of data.lines) {
-        // Deduplicar por timestamp+texto
         const key = (line.timestamp || '') + '|' + line.text;
         if (seenLogTimestamps.has(key)) continue;
         seenLogTimestamps.add(key);
-        addLogLine(line.stream, line.text);
+        if (selectedBot?.id === botId) addLogLine(line.stream, line.text);
       }
       if (data.status === 'stopped' && selectedBot?.id === botId) {
         updateBotStatus(botId, 'stopped');
@@ -2153,6 +2154,9 @@ function _updateBotStatusCore(botId, status) {
 async function selectBot(id) {
   const bot = bots.find(b => b.id === id);
   if (!bot) return;
+  // Detener el polling del bot anterior ANTES de cambiar selectedBot
+  stopLogPolling();
+  stopContainerInfo();
   selectedBot = bot;
 
   // Load files
