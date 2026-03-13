@@ -2060,48 +2060,64 @@ function simulateLogs(bot) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SIGNALR (Real backend)
+// SIGNALR — conexión única para logs de la consola individual
 // ─────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────
-// LOG POLLING (replaces SignalR for simplicity)
-// ─────────────────────────────────────────────────────────────
-var logPollingInterval = null;
-var seenLogTimestamps = new Set();
-
-function startLogPolling(botId) {
-  stopLogPolling();
-  seenLogTimestamps.clear();
-  logPollingInterval = setInterval(async () => {
-    // Si el usuario cambió de bot, cancelar este polling
-    if (selectedBot?.id !== botId) { stopLogPolling(); return; }
-    try {
-      const res = await fetch(`/api/bots/${botId}/logs`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data.lines) return;
-      for (const line of data.lines) {
-        const key = (line.timestamp || '') + '|' + line.text;
-        if (seenLogTimestamps.has(key)) continue;
-        seenLogTimestamps.add(key);
-        if (selectedBot?.id === botId) addLogLine(line.stream, line.text);
-      }
-      if (data.status === 'stopped' && selectedBot?.id === botId) {
-        updateBotStatus(botId, 'stopped');
-        stopLogPolling();
-      }
-    } catch (e) {}
-  }, 1500);
-}
-
-function stopLogPolling() {
-  if (logPollingInterval) {
-    clearInterval(logPollingInterval);
-    logPollingInterval = null;
-  }
-}
+var hubConnection = null;
+var hubSubscribedBot = null;   // botId actualmente suscrito en la consola individual
 
 function connectSignalR() {
-  // Using polling instead — no-op
+  if (typeof signalR === 'undefined') {
+    console.warn('SignalR no disponible');
+    return;
+  }
+
+  hubConnection = new signalR.HubConnectionBuilder()
+    .withUrl('/hubs/logs')
+    .withAutomaticReconnect()
+    .build();
+
+  // Recibir línea de log — solo pintar si es el bot seleccionado
+  hubConnection.on('ReceiveLog', (botId, stream, text) => {
+    if (selectedBot?.id === botId) addLogLine(stream, text);
+  });
+
+  // Recibir cambio de estado
+  hubConnection.on('BotStatusChanged', (botId, status) => {
+    updateBotStatus(botId, status);
+  });
+
+  // Al reconectar, re-suscribirse al bot activo
+  hubConnection.onreconnected(() => {
+    if (hubSubscribedBot) {
+      hubConnection.invoke('SubscribeToBot', hubSubscribedBot).catch(console.error);
+    }
+  });
+
+  hubConnection.start().then(() => {
+    console.log('SignalR conectado');
+  }).catch(e => console.error('SignalR error:', e));
+}
+
+async function startLogPolling(botId) {
+  // Cancelar suscripción anterior
+  await stopLogPolling();
+
+  hubSubscribedBot = botId;
+
+  if (!hubConnection || hubConnection.state !== signalR.HubConnectionState.Connected) {
+    // Esperar a que conecte (máx 3s) y reintentar
+    await new Promise(r => setTimeout(r, 500));
+    if (hubConnection?.state !== signalR.HubConnectionState.Connected) return;
+  }
+
+  await hubConnection.invoke('SubscribeToBot', botId);
+}
+
+async function stopLogPolling() {
+  if (hubSubscribedBot && hubConnection?.state === signalR.HubConnectionState.Connected) {
+    try { await hubConnection.invoke('UnsubscribeFromBot', hubSubscribedBot); } catch(e) {}
+  }
+  hubSubscribedBot = null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2213,7 +2229,7 @@ async function selectBot(id) {
   // Container info + log polling if already en ejecución
   if (bot.status === 'running' && bot.containerId) {
     startContainerInfo(bot.containerId);
-    startLogPolling(bot.id, bot.containerId);
+    await startLogPolling(bot.id);
   }
 }
 
@@ -2379,7 +2395,7 @@ async function runBot() {
     renderBotList(document.getElementById('search-input').value);
     updateStats();
     addLogLine('system', `Contenedor iniciado: ${bot.containerId}`);
-    startLogPolling(bot.id, bot.containerId);
+    await startLogPolling(bot.id);
     if (currentTab === 'editor') switchTab('logs');
   }
 }
@@ -2396,7 +2412,7 @@ async function stopBot() {
     renderBotList(document.getElementById('search-input').value);
     updateStats();
     addLogLine('system', 'Contenedor detenido por el usuario');
-    stopLogPolling();
+    await stopLogPolling();
   }
 }
 

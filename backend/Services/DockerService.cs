@@ -175,12 +175,32 @@ public class DockerService : IDockerService
     private static string StripTimestamp(string? line)
     {
         if (string.IsNullOrEmpty(line)) return string.Empty;
+
         // Docker --timestamps format: 2025-01-01T12:00:00.000000000Z <message>
         if (line.Length > 32 && line[10] == 'T')
         {
             var spaceIdx = line.IndexOf(' ');
-            return spaceIdx >= 0 ? line[(spaceIdx + 1)..] : line;
+            if (spaceIdx >= 0)
+            {
+                var text = line[(spaceIdx + 1)..];
+                // Remaining text is itself a bare ISO timestamp — discard
+                if (IsIsoTimestamp(text.Trim())) return string.Empty;
+                return text;
+            }
+            // Whole line is just a timestamp with no message — discard
+            return string.Empty;
         }
+
+        // Line has no leading timestamp but is itself a bare ISO timestamp — discard
+        if (IsIsoTimestamp(line.Trim())) return string.Empty;
+
         return line;
     }
+
+    // Matches: 2026-03-13T21:35:27.685621012Z
+    private static bool IsIsoTimestamp(string s) =>
+        s.Length >= 20 && s.Length <= 35 &&
+        s[4] == '-' && s[7] == '-' && s[10] == 'T' &&
+        s[13] == ':' && s[16] == ':' &&
+        (s[^1] == 'Z' || s[^1] == 'z');
 }
