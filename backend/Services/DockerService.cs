@@ -79,7 +79,7 @@ public class DockerService : IDockerService
         {
             image      = DEFAULT_IMAGE;
             volumeMode = "ro";           // Read-only: bot code cannot modify itself
-            extraFlags = "--read-only --tmpfs /tmp --security-opt no-new-privileges";
+            extraFlags = "--read-only --tmpfs /tmp --tmpfs /root/.local --tmpfs /root/.cache --security-opt no-new-privileges";
             _logger.LogInformation("Bot {Id} starting with default image", botId);
         }
 
