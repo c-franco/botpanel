@@ -1379,7 +1379,7 @@
   <div class="topbar-sep"></div>
   <div class="topbar-status">
     <div class="status-dot"></div>
-    <span>Docker Connected</span>
+    <span>Docker Conectado</span>
   </div>
   <!-- Global Navigation -->
   <div class="global-nav">
@@ -1387,13 +1387,13 @@
       ⬡ Bots
     </button>
     <button class="global-tab" id="nav-multiconsole" onclick="switchGlobalView('multiconsole')">
-      ⊞ Multi-Console
+      ⊞ Multi-Consola
       <span class="tab-badge" id="mc-badge">0</span>
     </button>
   </div>
   <div class="topbar-right">
     <div class="topbar-stat">
-      <span id="stat-running">0</span> running
+      <span id="stat-running">0</span> en ejecución
     </div>
     <div class="topbar-sep" style="margin: 0 4px;"></div>
     <div class="topbar-stat">
@@ -1415,11 +1415,11 @@
     <div class="sidebar-header">
       <span class="sidebar-title">Bots</span>
       <button class="btn-new" onclick="openNewBotModal()">
-        <span>+</span> New Bot
+        <span>+</span> Nuevo Bot
       </button>
     </div>
     <div class="search-box">
-      <input class="search-input" type="text" placeholder="Search bots..." id="search-input" oninput="filterBots(this.value)">
+      <input class="search-input" type="text" placeholder="Buscar bots..." id="search-input" oninput="filterBots(this.value)">
     </div>
     <div class="bot-list" id="bot-list"></div>
   </div>
@@ -1430,8 +1430,8 @@
     <!-- EMPTY STATE -->
     <div class="empty-state" id="empty-state">
       <div class="empty-icon">⬡</div>
-      <div class="empty-title">No bot selected</div>
-      <div class="empty-sub">Select a bot from the sidebar or create a new one</div>
+      <div class="empty-title">Ningún bot seleccionado</div>
+      <div class="empty-sub">Selecciona un bot del panel lateral o crea uno nuevo</div>
     </div>
 
     <!-- WORKSPACE -->
@@ -1442,27 +1442,27 @@
         <div class="workspace-bot-name" id="ws-bot-name">—</div>
         <div class="workspace-status-badge badge-stopped" id="ws-status-badge">STOPPED</div>
         <div class="workspace-actions">
-          <span class="save-indicator" id="save-indicator">Saved</span>
-          <button class="btn btn-save" onclick="saveCurrentFile()" id="btn-save">💾 Save</button>
-          <button class="btn btn-run" onclick="runBot()" id="btn-run">▶ Run</button>
-          <button class="btn btn-stop hidden" onclick="stopBot()" id="btn-stop">■ Stop</button>
-          <button class="btn btn-restart" onclick="restartBot()" id="btn-restart" disabled>↺ Restart</button>
+          <span class="save-indicator" id="save-indicator">Guardado</span>
+          <button class="btn btn-save" onclick="saveCurrentFile()" id="btn-save">💾 Guardar</button>
+          <button class="btn btn-run" onclick="runBot()" id="btn-run">▶ Ejecutar</button>
+          <button class="btn btn-stop hidden" onclick="stopBot()" id="btn-stop">■ Detener</button>
+          <button class="btn btn-restart" onclick="restartBot()" id="btn-restart" disabled>↺ Reiniciar</button>
         </div>
       </div>
 
       <!-- Tabs -->
       <div class="tabs">
-        <div class="tab active" data-tab="editor" onclick="switchTab('editor')">Code Editor</div>
-        <div class="tab" data-tab="logs" onclick="switchTab('logs')">Logs</div>
-        <div class="tab" data-tab="split" onclick="switchTab('split')">Split View</div>
+        <div class="tab active" data-tab="editor" onclick="switchTab('editor')">Editor de Código</div>
+        <div class="tab" data-tab="logs" onclick="switchTab('logs')">Registros</div>
+        <div class="tab" data-tab="split" onclick="switchTab('split')">Vista Dividida</div>
       </div>
 
       <!-- Container info bar -->
       <div class="container-info hidden" id="container-info">
-        <span>Container:</span>
+        <span>Contenedor:</span>
         <span class="container-id" id="container-id">—</span>
         <span>│</span>
-        <span>Uptime: <strong id="container-uptime">0s</strong></span>
+        <span>Activo: <strong id="container-uptime">0s</strong></span>
         <span>│</span>
         <span>CPU: <strong id="container-cpu">—</strong></span>
         <span>│</span>
@@ -1489,18 +1489,18 @@
       <!-- Logs Tab -->
       <div class="logs-pane hidden" id="tab-logs">
         <div class="logs-toolbar">
-          <span class="logs-label">Console Output</span>
+          <span class="logs-label">Salida de Consola</span>
           <div class="log-filter">
             <button class="filter-btn active-all" onclick="setLogFilter('all')" id="filter-all">ALL</button>
             <button class="filter-btn" onclick="setLogFilter('stdout')" id="filter-stdout">STDOUT</button>
             <button class="filter-btn" onclick="setLogFilter('stderr')" id="filter-stderr">STDERR</button>
           </div>
-          <button class="btn-clear" onclick="clearLogs()">Clear</button>
+          <button class="btn-clear" onclick="clearLogs()">Limpiar</button>
         </div>
         <div class="logs-scroll" id="logs-container">
           <div class="logs-empty" id="logs-empty">
             <span style="font-size:24px;opacity:0.3">⊡</span>
-            <span>No output yet. Run a bot to see logs.</span>
+            <span>Sin salida aún. Ejecuta un bot para ver los registros.</span>
           </div>
         </div>
       </div>
@@ -1518,13 +1518,13 @@
         <div class="split-divider" id="split-divider"></div>
         <div class="logs-pane" style="flex:1">
           <div class="logs-toolbar">
-            <span class="logs-label">Live Output</span>
-            <button class="btn-clear" onclick="clearLogs()">Clear</button>
+            <span class="logs-label">Salida en Vivo</span>
+            <button class="btn-clear" onclick="clearLogs()">Limpiar</button>
           </div>
           <div class="logs-scroll" id="logs-container-split">
             <div class="logs-empty">
               <span style="font-size:24px;opacity:0.3">⊡</span>
-              <span>No output yet.</span>
+              <span>Sin salida aún.</span>
             </div>
           </div>
         </div>
@@ -1542,27 +1542,27 @@
 
   <!-- Header -->
   <div class="mc-header">
-    <div class="mc-title">// Multi-Console</div>
+    <div class="mc-title">// Multi-Consola</div>
     <div class="mc-actions">
       <!-- Layout controls -->
-      <button class="mc-layout-btn active" id="layout-auto" onclick="setMcLayout('auto')" title="Auto grid">
+      <button class="mc-layout-btn active" id="layout-auto" onclick="setMcLayout('auto')" title="Cuadrícula automática">
         ⊞ Auto
       </button>
-      <button class="mc-layout-btn" id="layout-1col" onclick="setMcLayout('1col')" title="Single column">
+      <button class="mc-layout-btn" id="layout-1col" onclick="setMcLayout('1col')" title="Una columna">
         ▬ 1
       </button>
-      <button class="mc-layout-btn" id="layout-2col" onclick="setMcLayout('2col')" title="Two columns">
+      <button class="mc-layout-btn" id="layout-2col" onclick="setMcLayout('2col')" title="Dos columnas">
         ⊟ 2
       </button>
-      <button class="mc-layout-btn" id="layout-3col" onclick="setMcLayout('3col')" title="Three columns">
+      <button class="mc-layout-btn" id="layout-3col" onclick="setMcLayout('3col')" title="Tres columnas">
         ⊞ 3
       </button>
       <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
-      <button class="mc-layout-btn" onclick="mcClearAll()" title="Clear all consoles">
-        ✕ Clear all
+      <button class="mc-layout-btn" onclick="mcClearAll()" title="Limpiar todas las consolas">
+        ✕ Limpiar todo
       </button>
-      <button class="mc-layout-btn" onclick="mcRefresh()" title="Refresh running bots">
-        ↺ Refresh
+      <button class="mc-layout-btn" onclick="mcRefresh()" title="Actualizar bots activos">
+        ↺ Actualizar
       </button>
     </div>
   </div>
@@ -1573,8 +1573,8 @@
   <!-- Empty state (shown when no bots running) -->
   <div class="mc-empty hidden" id="mc-empty">
     <div class="mc-empty-icon">⊡</div>
-    <div class="mc-empty-title">No active bots</div>
-    <div class="mc-empty-sub">Start a bot from the Bots view to see its console here</div>
+    <div class="mc-empty-title">No hay bots activos</div>
+    <div class="mc-empty-sub">Inicia un bot desde la vista Bots para ver su consola aquí</div>
   </div>
 
 </div><!-- /view-multiconsole -->
@@ -1586,28 +1586,28 @@
 <!-- New Bot Modal -->
 <div class="modal-overlay" id="modal-new-bot">
   <div class="modal">
-    <div class="modal-title">// Create New Bot</div>
+    <div class="modal-title">// Crear Nuevo Bot</div>
     <div class="form-group">
-      <label class="form-label">Bot Name</label>
-      <input class="form-input" type="text" id="new-bot-name" placeholder="my_awesome_bot" onkeyup="sanitizeBotName(this)">
-      <div class="form-hint">Only letters, numbers, and underscores. This will be the directory name.</div>
+      <label class="form-label">Nombre del Bot</label>
+      <input class="form-input" type="text" id="new-bot-name" placeholder="mi_bot_increible" onkeyup="sanitizeBotName(this)">
+      <div class="form-hint">Solo letras, números y guiones bajos. Será el nombre del directorio.</div>
     </div>
     <div class="form-group">
-      <label class="form-label">Description (optional)</label>
-      <input class="form-input" type="text" id="new-bot-desc" placeholder="What does this bot do?">
+      <label class="form-label">Descripción (opcional)</label>
+      <input class="form-input" type="text" id="new-bot-desc" placeholder="¿Qué hace este bot?">
     </div>
     <div class="form-group">
-      <label class="form-label">Template</label>
+      <label class="form-label">Plantilla</label>
       <select class="form-input" id="new-bot-template">
-        <option value="basic">Basic — Hello World</option>
-        <option value="loop">Loop — Repeating task</option>
-        <option value="requests">HTTP Bot — Requests library</option>
+        <option value="basic">Básico — Hola Mundo</option>
+        <option value="loop">Bucle — Tarea repetitiva</option>
+        <option value="requests">Bot HTTP — Librería Requests</option>
         <option value="blank">Blank</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-new-bot')">Cancel</button>
-      <button class="btn-primary" onclick="createBot()">Create Bot</button>
+      <button class="btn-ghost" onclick="closeModal('modal-new-bot')">Cancelar</button>
+      <button class="btn-primary" onclick="createBot()">Crear Bot</button>
     </div>
   </div>
 </div>
@@ -1615,11 +1615,11 @@
 <!-- Delete Confirm Modal -->
 <div class="modal-overlay" id="modal-delete">
   <div class="modal">
-    <div class="modal-title">// Delete Bot</div>
-    <p class="confirm-text">This will permanently delete <span class="confirm-name" id="delete-bot-name">—</span> and all its files. This action cannot be undone.</p>
+    <div class="modal-title">// Eliminar Bot</div>
+    <p class="confirm-text">Esto eliminará permanentemente a <span class="confirm-name" id="delete-bot-name">—</span> y todos sus archivos. Esta acción no se puede deshacer.</p>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancel</button>
-      <button class="btn-danger" onclick="confirmDelete()">Delete Forever</button>
+      <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
+      <button class="btn-danger" onclick="confirmDelete()">Eliminar Definitivamente</button>
     </div>
   </div>
 </div>
@@ -2108,7 +2108,7 @@ function renderBotList(filter = '') {
   );
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-muted);font-size:12px;">No bots found</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-muted);font-size:12px;">No se encontraron bots</div>`;
     return;
   }
 
@@ -2117,11 +2117,11 @@ function renderBotList(filter = '') {
       <div class="bot-status-indicator ${bot.status}"></div>
       <div class="bot-info">
         <div class="bot-name">${bot.name}</div>
-        <div class="bot-meta">${bot.description || 'No description'}</div>
+        <div class="bot-meta">${bot.description || 'Sin descripción'}</div>
       </div>
       <div class="bot-actions">
-        <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="Quick Run">▶</button>
-        <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="Delete">✕</button>
+        <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="Ejecutar">▶</button>
+        <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="Eliminar">✕</button>
       </div>
     </div>
   `).join('');
@@ -2194,7 +2194,7 @@ async function selectBot(id) {
   // Re-render list
   renderBotList(document.getElementById('search-input').value);
 
-  // Container info + log polling if already running
+  // Container info + log polling if already en ejecución
   if (bot.status === 'running' && bot.containerId) {
     startContainerInfo(bot.containerId);
     startLogPolling(bot.id, bot.containerId);
@@ -2211,7 +2211,7 @@ function renderWorkspaceStatus(bot) {
   badge.className = 'workspace-status-badge';
   if (bot.status === 'running') {
     badge.classList.add('badge-running');
-    badge.textContent = 'RUNNING';
+    badge.textContent = 'EN EJECUCIÓN';
     btnRun.classList.add('hidden');
     btnStop.classList.remove('hidden');
     btnRestart.disabled = false;
@@ -2228,7 +2228,7 @@ function renderWorkspaceStatus(bot) {
     stopContainerInfo();
   } else {
     badge.classList.add('badge-stopped');
-    badge.textContent = 'STOPPED';
+    badge.textContent = 'DETENIDO';
     btnRun.classList.remove('hidden');
     btnStop.classList.add('hidden');
     btnRestart.disabled = true;
@@ -2320,16 +2320,16 @@ async function saveCurrentFile() {
     savedContents[currentFile] = fileContents[currentFile];
     updateSaveIndicator(false);
     markFileTabModified(currentFile, false);
-    showToast('success', `${currentFile} saved`);
+    showToast('success', `${currentFile} guardado`);
   } catch (e) {
-    showToast('error', `Error saving: ${e.message}`);
+    showToast('error', `Error al guardar: ${e.message}`);
     console.error('Save error:', e);
   }
 }
 
 function updateSaveIndicator(unsaved) {
   const el = document.getElementById('save-indicator');
-  el.textContent = unsaved ? 'Unsaved changes' : 'Saved';
+  el.textContent = unsaved ? 'Cambios sin guardar' : 'Guardado';
   el.className = unsaved ? 'save-indicator unsaved' : 'save-indicator';
 }
 
@@ -2362,7 +2362,7 @@ async function runBot() {
     renderWorkspaceStatus(bot);
     renderBotList(document.getElementById('search-input').value);
     updateStats();
-    addLogLine('system', `Container started: ${bot.containerId}`);
+    addLogLine('system', `Contenedor iniciado: ${bot.containerId}`);
     startLogPolling(bot.id, bot.containerId);
     if (currentTab === 'editor') switchTab('logs');
   }
@@ -2379,7 +2379,7 @@ async function stopBot() {
     renderWorkspaceStatus(bot);
     renderBotList(document.getElementById('search-input').value);
     updateStats();
-    addLogLine('system', 'Container stopped by user');
+    addLogLine('system', 'Contenedor detenido por el usuario');
     stopLogPolling();
   }
 }
@@ -2393,7 +2393,7 @@ async function quickRun(botId) {
   const bot = bots.find(b => b.id === botId);
   if (!bot) return;
   if (bot.status === 'running') {
-    showToast('info', `${bot.name} is already running`);
+    showToast('info', `${bot.name} ya está en ejecución`);
     return;
   }
   await selectBot(botId);
@@ -2437,7 +2437,7 @@ function renderLogLine(line) {
 
 function renderLogs() {
   const container = document.getElementById('logs-container');
-  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>No output yet. Run a bot to see logs.</span></div>';
+  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>Sin salida aún. Ejecuta un bot para ver los registros.</span></div>';
   const filtered = logLines.filter(l =>
     logFilter === 'all' || logFilter === l.stream || l.stream === 'system'
   );
@@ -2458,7 +2458,7 @@ function setLogFilter(filter) {
 function clearLogs() {
   logLines = [];
   const container = document.getElementById('logs-container');
-  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>No output yet. Run a bot to see logs.</span></div>';
+  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>Sin salida aún. Ejecuta un bot para ver los registros.</span></div>';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2480,8 +2480,8 @@ async function createBot() {
   const desc = document.getElementById('new-bot-desc').value.trim();
   const template = document.getElementById('new-bot-template').value;
 
-  if (!name) { showToast('error', 'Bot name is required'); return; }
-  if (bots.find(b => b.name === name)) { showToast('error', 'Bot name already exists'); return; }
+  if (!name) { showToast('error', 'El nombre del bot es obligatorio'); return; }
+  if (bots.find(b => b.name === name)) { showToast('error', 'Ya existe un bot con ese nombre'); return; }
 
   const bot = await apiCall('POST', '/bots', { name, description: desc, template });
   if (bot) {
@@ -2489,7 +2489,7 @@ async function createBot() {
     renderBotList();
     updateStats();
     closeModal('modal-new-bot');
-    showToast('success', `Bot "${name}" created`);
+    showToast('success', `Bot "${name}" creado`);
     selectBot(bot.id);
   }
 }
@@ -2518,7 +2518,7 @@ async function confirmDelete() {
   closeModal('modal-delete');
   renderBotList();
   updateStats();
-  showToast('success', 'Bot deleted');
+  showToast('success', 'Bot eliminado');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2804,19 +2804,19 @@ function mcCreateCard(bot) {
       <div class="card-name">${escapeHtml(bot.name)}</div>
       <span class="card-status-text ${bot.status}" id="mc-status-${bot.id}">${bot.status.toUpperCase()}</span>
       <button class="card-btn-go" onclick="switchGlobalView('bots'); selectBot('${bot.id}')">
-        ↗ Open
+        ↗ Abrir
       </button>
     </div>
     <div class="card-console" id="mc-console-${bot.id}">
       <div class="card-empty" id="mc-empty-${bot.id}">
         <span style="opacity:0.3;font-size:20px">⊡</span>
-        <span>${bot.status === 'running' ? 'Connecting...' : 'Bot is stopped'}</span>
+        <span>${bot.status === 'running' ? 'Conectando...' : 'Bot detenido'}</span>
       </div>
     </div>
     <div class="card-footer">
-      <span class="card-footer-stat">Lines: <span id="mc-linecount-${bot.id}">0</span></span>
-      <span class="card-footer-stat" id="mc-container-${bot.id}">${bot.containerId ? 'Container: ' + bot.containerId : ''}</span>
-      <button class="card-btn-clear" onclick="mcClearCard('${bot.id}')">Clear</button>
+      <span class="card-footer-stat">Líneas: <span id="mc-linecount-${bot.id}">0</span></span>
+      <span class="card-footer-stat" id="mc-container-${bot.id}">${bot.containerId ? 'Contenedor: ' + bot.containerId : ''}</span>
+      <button class="card-btn-clear" onclick="mcClearCard('${bot.id}')">Limpiar</button>
     </div>
   `;
 
@@ -2916,7 +2916,7 @@ function mcClearCard(botId) {
     consoleEl.innerHTML = `
       <div class="card-empty" id="mc-empty-${botId}">
         <span style="opacity:0.3;font-size:20px">⊡</span>
-        <span>Cleared</span>
+        <span>Limpiado</span>
       </div>`;
   }
   const countEl = document.getElementById(`mc-linecount-${botId}`);
