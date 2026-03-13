@@ -93,7 +93,7 @@ public class DockerService : IDockerService
             $"--volume \"{absPath}:/app:{volumeMode}\"",
             "--workdir /app",
             image,
-            "sh -c \"pip install -r requirements.txt -q && python -u bot.py\""
+            "sh -c \"pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore && python -u bot.py\""
         );
 
         _logger.LogInformation("Starting container: docker {Args}", args);
