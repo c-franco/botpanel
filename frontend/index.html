@@ -1198,21 +1198,21 @@
 const API_BASE = '/api';
 const HUB_URL = '/hubs/logs';
 
-let bots = [];
-let selectedBot = null;
-let currentFile = 'bot.py';
-let currentTab = 'editor';
-let logFilter = 'all';
-let logLines = [];
-let monacoEditor = null;
-let monacoReady = false;
-let pendingDelete = null;
-let fileContents = { 'bot.py': '', 'requirements.txt': '' };
-let savedContents = { 'bot.py': '', 'requirements.txt': '' };
-let signalRConnection = null;
-let uptimeInterval = null;
-let botStartTime = null;
-let cpuSimInterval = null;
+var bots = [];
+var selectedBot = null;
+var currentFile = 'bot.py';
+var currentTab = 'editor';
+var logFilter = 'all';
+var logLines = [];
+var monacoEditor = null;
+var monacoReady = false;
+var pendingDelete = null;
+var fileContents = { 'bot.py': '', 'requirements.txt': '' };
+var savedContents = { 'bot.py': '', 'requirements.txt': '' };
+var signalRConnection = null;
+var uptimeInterval = null;
+var botStartTime = null;
+var cpuSimInterval = null;
 
 // ─────────────────────────────────────────────────────────────
 // CLOCK
