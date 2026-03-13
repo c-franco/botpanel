@@ -184,6 +184,86 @@ public class BotsController : ControllerBase
         }
     }
 
+    // ─── GET /api/bots/{id}/logs ─────────────────────────────
+    // Polling endpoint: returns recent log lines from the container.
+    // Optional ?since=<timestamp> to get only new lines.
+    [HttpGet("{id}/logs")]
+    public async Task<IActionResult> GetLogs(string id, [FromQuery] string? since = null)
+    {
+        var bot = _repo.GetById(id);
+        if (bot == null) return NotFound();
+        if (bot.ContainerId == null)
+            return Ok(new { lines = Array.Empty<object>(), status = "stopped" });
+
+        try
+        {
+            // Run `docker logs` with optional --since
+            var args = since != null
+                ? $"logs --timestamps --since \"{since}\" {bot.ContainerId}"
+                : $"logs --timestamps --tail 100 {bot.ContainerId}";
+
+            var psi = new System.Diagnostics.ProcessStartInfo("docker", args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var stdout = await proc.StandardOutput.ReadToEndAsync();
+            var stderr = await proc.StandardError.ReadToEndAsync();
+            await proc.WaitForExitAsync();
+
+            var lines = new List<object>();
+
+            void ParseLines(string raw, string stream)
+            {
+                foreach (var line in raw.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    // Docker timestamps: 2025-01-01T12:00:00.000000000Z text
+                    string timestamp = "";
+                    string text = line;
+                    if (line.Length > 32 && line[10] == 'T')
+                    {
+                        var spaceIdx = line.IndexOf(' ');
+                        if (spaceIdx >= 0)
+                        {
+                            timestamp = line[..spaceIdx];
+                            text = line[(spaceIdx + 1)..];
+                        }
+                    }
+                    lines.Add(new { stream, text, timestamp });
+                }
+            }
+
+            ParseLines(stdout, "stdout");
+            ParseLines(stderr, "stderr");
+
+            // Check if container is still running
+            var inspectPsi = new System.Diagnostics.ProcessStartInfo(
+                "docker", $"inspect --format={{{{.State.Running}}}} {bot.ContainerId}")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var inspectProc = System.Diagnostics.Process.Start(inspectPsi)!;
+            var running = (await inspectProc.StandardOutput.ReadToEndAsync()).Trim();
+            await inspectProc.WaitForExitAsync();
+
+            var status = running == "true" ? "running" : "stopped";
+            if (status == "stopped") _repo.UpdateStatus(id, BotStatus.Stopped, null);
+
+            return Ok(new { lines, status });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get logs for bot {Id}", id);
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
     // ─── POST /api/bots/{id}/restart ─────────────────────────
     [HttpPost("{id}/restart")]
     public async Task<IActionResult> Restart(string id)

@@ -1185,9 +1185,6 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
-<!-- SignalR -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-
 <!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 
@@ -1608,33 +1605,50 @@ function simulateLogs(bot) {
 // ─────────────────────────────────────────────────────────────
 // SIGNALR (Real backend)
 // ─────────────────────────────────────────────────────────────
-async function connectSignalR() {
-  if (typeof signalR === 'undefined') {
-    console.warn('SignalR not loaded yet, retrying in 1s...');
-    setTimeout(connectSignalR, 1000);
-    return;
+// ─────────────────────────────────────────────────────────────
+// LOG POLLING (replaces SignalR for simplicity)
+// ─────────────────────────────────────────────────────────────
+var logPollingInterval = null;
+var lastLogTimestamp = null;
+
+function startLogPolling(botId, containerId) {
+  stopLogPolling();
+  lastLogTimestamp = null;
+  logPollingInterval = setInterval(async () => {
+    try {
+      const url = lastLogTimestamp
+        ? `/api/bots/${botId}/logs?since=${encodeURIComponent(lastLogTimestamp)}`
+        : `/api/bots/${botId}/logs`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.lines || data.lines.length === 0) return;
+      for (const line of data.lines) {
+        addLogLine(line.stream, line.text);
+      }
+      if (data.lines.length > 0) {
+        lastLogTimestamp = data.lines[data.lines.length - 1].timestamp;
+      }
+      // Check if container stopped
+      if (data.status === 'stopped' && selectedBot?.id === botId) {
+        updateBotStatus(botId, 'stopped');
+        stopLogPolling();
+      }
+    } catch (e) {
+      // ignore polling errors
+    }
+  }, 1500);
+}
+
+function stopLogPolling() {
+  if (logPollingInterval) {
+    clearInterval(logPollingInterval);
+    logPollingInterval = null;
   }
-  signalRConnection = new signalR.HubConnectionBuilder()
-    .withUrl(HUB_URL)
-    .withAutomaticReconnect()
-    .configureLogging(signalR.LogLevel.Warning)
-    .build();
+}
 
-  signalRConnection.on('ReceiveLog', (botId, stream, text) => {
-    if (botId === selectedBot?.id) addLogLine(stream, text);
-  });
-
-  signalRConnection.on('BotStatusChanged', (botId, status) => {
-    updateBotStatus(botId, status);
-  });
-
-  try {
-    await signalRConnection.start();
-    console.log('SignalR connected');
-  } catch (e) {
-    console.warn('SignalR connection failed:', e);
-    setTimeout(connectSignalR, 3000);
-  }
+function connectSignalR() {
+  // Using polling instead — no-op
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1740,9 +1754,10 @@ async function selectBot(id) {
   // Re-render list
   renderBotList(document.getElementById('search-input').value);
 
-  // Container info
+  // Container info + log polling if already running
   if (bot.status === 'running' && bot.containerId) {
     startContainerInfo(bot.containerId);
+    startLogPolling(bot.id, bot.containerId);
   }
 }
 
@@ -1908,6 +1923,7 @@ async function runBot() {
     renderBotList(document.getElementById('search-input').value);
     updateStats();
     addLogLine('system', `Container started: ${bot.containerId}`);
+    startLogPolling(bot.id, bot.containerId);
     if (currentTab === 'editor') switchTab('logs');
   }
 }
@@ -1924,6 +1940,7 @@ async function stopBot() {
     renderBotList(document.getElementById('search-input').value);
     updateStats();
     addLogLine('system', 'Container stopped by user');
+    stopLogPolling();
   }
 }
 
