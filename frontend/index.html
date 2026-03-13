@@ -1691,7 +1691,6 @@ async function selectBot(id) {
   if (!bot) return;
   selectedBot = bot;
 
-  // Load files
   const [pyRes, reqRes] = await Promise.all([
     apiCall('GET', `/bots/${id}/files/bot.py`),
     apiCall('GET', `/bots/${id}/files/requirements.txt`),
@@ -1702,29 +1701,25 @@ async function selectBot(id) {
   savedContents['bot.py'] = fileContents['bot.py'];
   savedContents['requirements.txt'] = fileContents['requirements.txt'];
 
-  // Show workspace
   document.getElementById('empty-state').classList.add('hidden');
   document.getElementById('workspace').classList.remove('hidden');
-
-  // Update header
   document.getElementById('ws-bot-name').textContent = bot.name;
   renderWorkspaceStatus(bot);
 
-  // Load editor
   currentFile = 'bot.py';
-  switchFile('bot.py');
-  updateSaveIndicator(false);
-  markFileTabModified('bot.py', false);
-  markFileTabModified('requirements.txt', false);
 
-  // Clear logs
+  // Wait a tick to ensure Monaco is fully rendered before setting content
+  setTimeout(() => {
+    switchFile('bot.py');
+    updateSaveIndicator(false);
+    markFileTabModified('bot.py', false);
+    markFileTabModified('requirements.txt', false);
+  }, 50);
+
   logLines = [];
   renderLogs();
-
-  // Re-render list
   renderBotList(document.getElementById('search-input').value);
 
-  // Container info
   if (bot.status === 'running' && bot.containerId) {
     startContainerInfo(bot.containerId);
   }
@@ -1794,21 +1789,25 @@ function stopContainerInfo() {
 // FILE SWITCHING
 // ─────────────────────────────────────────────────────────────
 function switchFile(filename) {
-  if (!monacoReady) return;
-  // Save current content
-  if (monacoEditor && currentFile) {
+  if (!monacoReady || !monacoEditor) return;
+  if (currentFile && monacoEditor) {
     fileContents[currentFile] = monacoEditor.getValue();
   }
   currentFile = filename;
   const lang = filename.endsWith('.py') ? 'python' : 'plaintext';
-  const model = monaco.editor.createModel(fileContents[filename] || '', lang);
-  monacoEditor.setModel(model);
 
-  // Update file tabs
+  // Dispose old model to avoid memory leaks
+  const oldModel = monacoEditor.getModel();
+  const newModel = monaco.editor.createModel(fileContents[filename] || '', lang);
+  monacoEditor.setModel(newModel);
+  if (oldModel) oldModel.dispose();
+
+  // Force editor to re-render with new content
+  monacoEditor.layout();
+
   document.querySelectorAll('.file-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.file === filename);
   });
-
   updateSaveIndicator(fileContents[filename] !== savedContents[filename]);
 }
 
