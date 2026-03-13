@@ -37,6 +37,18 @@ public class BotsController : ControllerBase
         return Ok(_repo.GetAll().Select(ToDto));
     }
 
+    // ─── GET /api/bots/running ───────────────────────────────
+    // Returns only bots that are currently running.
+    // Used by the Multi-Console view to know which bots to subscribe to.
+    [HttpGet("running")]
+    public ActionResult<IEnumerable<BotDto>> GetRunning()
+    {
+        var running = _repo.GetAll()
+            .Where(b => b.Status == BotStatus.Running)
+            .Select(ToDto);
+        return Ok(running);
+    }
+
     // ─── GET /api/bots/{id} ──────────────────────────────────
     [HttpGet("{id}")]
     public ActionResult<BotDto> GetById(string id)

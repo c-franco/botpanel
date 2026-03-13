@@ -43,6 +43,22 @@
       flex-direction: column;
     }
 
+    /* Wrapper que contiene tanto .layout como #view-multiconsole */
+    .view-root {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
     /* ─── TOPBAR ─── */
     .topbar {
       height: 52px;
@@ -118,7 +134,6 @@
     /* ─── LAYOUT ─── */
     .layout {
       display: flex;
-      flex: 1;
       overflow: hidden;
     }
 
@@ -966,6 +981,374 @@
 
     .save-indicator.unsaved { color: var(--accent-amber); }
 
+    /* ─── GLOBAL NAV TABS ─── */
+    .global-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 16px;
+    }
+
+    .global-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.12s;
+      background: transparent;
+    }
+
+    .global-tab:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+      border-color: var(--border);
+    }
+
+    .global-tab.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 212, 255, 0.06);
+      border-color: rgba(0, 212, 255, 0.25);
+    }
+
+    .global-tab .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      line-height: 1;
+    }
+
+    /* ─── MULTI-CONSOLE VIEW ─── */
+    #view-multiconsole {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-void);
+    }
+
+    #view-multiconsole.active {
+      display: flex;
+    }
+
+    .mc-header {
+      height: 48px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .mc-title {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .mc-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mc-layout-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.12s;
+    }
+
+    .mc-layout-btn:hover, .mc-layout-btn.active {
+      border-color: var(--border-bright);
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+    }
+
+    .mc-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      align-content: start;
+    }
+
+    .mc-grid::-webkit-scrollbar { width: 4px; }
+    .mc-grid::-webkit-scrollbar-track { background: transparent; }
+    .mc-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .mc-grid.layout-1col { grid-template-columns: 1fr; }
+    .mc-grid.layout-2col { grid-template-columns: repeat(2, 1fr); }
+    .mc-grid.layout-3col { grid-template-columns: repeat(3, 1fr); }
+    .mc-grid.layout-auto { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); }
+
+    /* ─── CONSOLE CARD ─── */
+    .console-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 340px;
+      transition: border-color 0.2s;
+    }
+
+    .console-card.card-running {
+      border-color: rgba(0, 255, 136, 0.2);
+      box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .console-card.card-error {
+      border-color: rgba(255, 51, 102, 0.25);
+      box-shadow: 0 0 0 1px rgba(255, 51, 102, 0.05);
+    }
+
+    .console-card.card-stopped {
+      opacity: 0.55;
+    }
+
+    .card-titlebar {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      height: 36px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .card-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card-dot.running {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    .card-dot.stopped { background: var(--text-muted); }
+    .card-dot.error { background: var(--accent-red); }
+
+    .card-name {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-status-text {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .card-status-text.running {
+      color: var(--accent-green);
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .card-status-text.stopped {
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+
+    .card-status-text.error {
+      color: var(--accent-red);
+      background: rgba(255, 51, 102, 0.08);
+      border: 1px solid rgba(255, 51, 102, 0.2);
+    }
+
+    .card-btn-go {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.12s;
+    }
+
+    .card-btn-go:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(0, 212, 255, 0.06);
+    }
+
+    .card-console {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      font-size: 11px;
+      line-height: 1.65;
+      background: var(--bg-void);
+    }
+
+    .card-console::-webkit-scrollbar { width: 3px; }
+    .card-console::-webkit-scrollbar-track { background: transparent; }
+    .card-console::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .card-log-line {
+      display: flex;
+      gap: 8px;
+      padding: 1px 0;
+    }
+
+    .card-log-time {
+      color: var(--text-muted);
+      font-size: 9px;
+      flex-shrink: 0;
+      padding-top: 1px;
+      min-width: 60px;
+    }
+
+    .card-log-text {
+      color: var(--text-code);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .card-log-line.stderr .card-log-text { color: #ff8099; }
+    .card-log-line.system .card-log-text { color: var(--accent-cyan); font-style: italic; }
+
+    .card-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .card-footer {
+      height: 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .card-footer-stat {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .card-footer-stat span {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .card-btn-clear {
+      margin-left: auto;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 2px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.12s;
+    }
+
+    .card-btn-clear:hover {
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ─── MULTI-CONSOLE EMPTY STATE ─── */
+    .mc-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--text-muted);
+    }
+
+    .mc-empty-icon {
+      font-size: 40px;
+      opacity: 0.2;
+    }
+
+    .mc-empty-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+    }
+
+    .mc-empty-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
     /* ─── CONTAINER INFO ─── */
     .container-info {
       padding: 8px 16px;
@@ -998,6 +1381,16 @@
     <div class="status-dot"></div>
     <span>Docker Connected</span>
   </div>
+  <!-- Global Navigation -->
+  <div class="global-nav">
+    <button class="global-tab active" id="nav-bots" onclick="switchGlobalView('bots')">
+      ⬡ Bots
+    </button>
+    <button class="global-tab" id="nav-multiconsole" onclick="switchGlobalView('multiconsole')">
+      ⊞ Multi-Console
+      <span class="tab-badge" id="mc-badge">0</span>
+    </button>
+  </div>
   <div class="topbar-right">
     <div class="topbar-stat">
       <span id="stat-running">0</span> running
@@ -1010,6 +1403,9 @@
     <div class="topbar-stat" id="clock">00:00:00</div>
   </div>
 </div>
+
+<!-- VIEW ROOT -->
+<div class="view-root">
 
 <!-- LAYOUT -->
 <div class="layout">
@@ -1139,6 +1535,52 @@
   </div><!-- /main -->
 </div><!-- /layout -->
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MULTI-CONSOLE VIEW                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="view-multiconsole">
+
+  <!-- Header -->
+  <div class="mc-header">
+    <div class="mc-title">// Multi-Console</div>
+    <div class="mc-actions">
+      <!-- Layout controls -->
+      <button class="mc-layout-btn active" id="layout-auto" onclick="setMcLayout('auto')" title="Auto grid">
+        ⊞ Auto
+      </button>
+      <button class="mc-layout-btn" id="layout-1col" onclick="setMcLayout('1col')" title="Single column">
+        ▬ 1
+      </button>
+      <button class="mc-layout-btn" id="layout-2col" onclick="setMcLayout('2col')" title="Two columns">
+        ⊟ 2
+      </button>
+      <button class="mc-layout-btn" id="layout-3col" onclick="setMcLayout('3col')" title="Three columns">
+        ⊞ 3
+      </button>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+      <button class="mc-layout-btn" onclick="mcClearAll()" title="Clear all consoles">
+        ✕ Clear all
+      </button>
+      <button class="mc-layout-btn" onclick="mcRefresh()" title="Refresh running bots">
+        ↺ Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid of consoles / empty state -->
+  <div id="mc-grid" class="mc-grid layout-auto"></div>
+
+  <!-- Empty state (shown when no bots running) -->
+  <div class="mc-empty hidden" id="mc-empty">
+    <div class="mc-empty-icon">⊡</div>
+    <div class="mc-empty-title">No active bots</div>
+    <div class="mc-empty-sub">Start a bot from the Bots view to see its console here</div>
+  </div>
+
+</div><!-- /view-multiconsole -->
+
+</div><!-- /view-root -->
+
 <!-- MODALS -->
 
 <!-- New Bot Modal -->
@@ -1184,6 +1626,9 @@
 
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
+
+<!-- SignalR client for Multi-Console -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
 <!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
@@ -1690,7 +2135,7 @@ function updateStats() {
   document.getElementById('stat-total').textContent = bots.length;
 }
 
-function updateBotStatus(botId, status) {
+function _updateBotStatusCore(botId, status) {
   const bot = bots.find(b => b.id === botId);
   if (!bot) return;
   bot.status = status;
@@ -2141,6 +2586,377 @@ document.addEventListener('mousemove', e => {
   }
 });
 document.addEventListener('mouseup', () => dragging = false);
+
+// ─────────────────────────────────────────────────────────────
+// GLOBAL VIEW SWITCHING (Bots / Multi-Console)
+// ─────────────────────────────────────────────────────────────
+var currentGlobalView = 'bots';
+
+function switchGlobalView(view) {
+  currentGlobalView = view;
+
+  // Toggle nav tabs
+  document.getElementById('nav-bots').classList.toggle('active', view === 'bots');
+  document.getElementById('nav-multiconsole').classList.toggle('active', view === 'multiconsole');
+
+  // Toggle layout containers
+  document.querySelector('.layout').style.display = view === 'bots' ? 'flex' : 'none';
+  const mcView = document.getElementById('view-multiconsole');
+  mcView.classList.toggle('active', view === 'multiconsole');
+
+  if (view === 'multiconsole') {
+    mcRefresh();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MULTI-CONSOLE STATE
+// ─────────────────────────────────────────────────────────────
+var mcLayout = 'auto';
+var mcConsoles = {};      // { botId: { bot, logs: [], lineCount, el } }
+var mcHubConnection = null;
+var mcSubscribedBots = new Set();
+
+// ─────────────────────────────────────────────────────────────
+// MULTI-CONSOLE LAYOUT
+// ─────────────────────────────────────────────────────────────
+function setMcLayout(layout) {
+  mcLayout = layout;
+  const grid = document.getElementById('mc-grid');
+  grid.className = 'mc-grid layout-' + layout;
+  document.querySelectorAll('.mc-layout-btn[id^="layout-"]').forEach(btn => {
+    btn.classList.toggle('active', btn.id === 'layout-' + layout);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// MULTI-CONSOLE REFRESH — fetch running bots, subscribe to all
+// ─────────────────────────────────────────────────────────────
+async function mcRefresh() {
+  try {
+    const res = await fetch('/api/bots/running');
+    const runningBots = res.ok ? await res.json() : [];
+
+    // Also get all bots to show stopped ones that were added while view was open
+    const allBotsRes = await fetch('/api/bots');
+    const allBots = allBotsRes.ok ? await allBotsRes.json() : [];
+
+    // Merge: running bots always included; keep existing stopped cards if already present
+    const botsToShow = new Map();
+    for (const b of runningBots) botsToShow.set(b.id, b);
+    for (const b of Object.keys(mcConsoles)) {
+      const found = allBots.find(x => x.id === b);
+      if (found && !botsToShow.has(b)) botsToShow.set(b, found);
+    }
+
+    // Create cards for new bots
+    for (const [id, bot] of botsToShow) {
+      if (!mcConsoles[id]) {
+        mcCreateCard(bot);
+      } else {
+        // Update status if changed
+        mcUpdateCardStatus(id, bot.status);
+      }
+    }
+
+    // Remove cards for bots that no longer exist at all
+    const allBotIds = new Set(allBots.map(b => b.id));
+    for (const id of Object.keys(mcConsoles)) {
+      if (!allBotIds.has(id)) mcRemoveCard(id);
+    }
+
+    mcRenderEmptyState();
+    mcEnsureHubConnection();
+    mcUpdateBadge();
+  } catch (e) {
+    console.error('mcRefresh error:', e);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MULTI-CONSOLE SIGNALR HUB — single connection, multi-group
+// ─────────────────────────────────────────────────────────────
+function mcEnsureHubConnection() {
+  // If SignalR library not loaded, fall back to polling per card
+  if (typeof signalR === 'undefined') {
+    mcStartPollingAll();
+    return;
+  }
+
+  if (!mcHubConnection) {
+    mcHubConnection = new signalR.HubConnectionBuilder()
+      .withUrl('/hubs/logs')
+      .withAutomaticReconnect()
+      .build();
+
+    mcHubConnection.on('ReceiveLog', (botId, stream, text) => {
+      mcAppendLog(botId, stream, text);
+    });
+
+    mcHubConnection.on('BotStatusChanged', (botId, status) => {
+      mcUpdateCardStatus(botId, status);
+      // Update main bots list too
+      updateBotStatus(botId, status);
+      mcUpdateBadge();
+    });
+
+    mcHubConnection.onreconnected(() => {
+      // Re-subscribe to all active bots after reconnect
+      for (const id of mcSubscribedBots) {
+        mcHubConnection.invoke('SubscribeToBot', id).catch(console.error);
+      }
+    });
+  }
+
+  const startAndSubscribe = async () => {
+    try {
+      if (mcHubConnection.state === signalR.HubConnectionState.Disconnected) {
+        await mcHubConnection.start();
+      }
+      // Subscribe to all running bots not yet subscribed
+      for (const [id, console_] of Object.entries(mcConsoles)) {
+        if (console_.bot.status === 'running' && !mcSubscribedBots.has(id)) {
+          await mcHubConnection.invoke('SubscribeToBot', id);
+          mcSubscribedBots.add(id);
+          // Load last logs via polling once, then live via SignalR
+          mcLoadInitialLogs(id);
+        }
+      }
+    } catch (e) {
+      console.error('mcHub connection error:', e);
+      // Fallback to polling
+      mcStartPollingAll();
+    }
+  };
+
+  startAndSubscribe();
+}
+
+// Load the last N log lines for a bot when first subscribing
+async function mcLoadInitialLogs(botId) {
+  try {
+    const res = await fetch(`/api/bots/${botId}/logs`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.lines) return;
+    for (const line of data.lines) {
+      mcAppendLog(botId, line.stream, line.text, true /* initial */);
+    }
+  } catch (e) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// FALLBACK: polling per card (when SignalR unavailable)
+// ─────────────────────────────────────────────────────────────
+var mcPollingIntervals = {};
+var mcSeenKeys = {};
+
+function mcStartPollingAll() {
+  for (const [id, con] of Object.entries(mcConsoles)) {
+    if (con.bot.status === 'running' && !mcPollingIntervals[id]) {
+      mcStartPolling(id);
+    }
+  }
+}
+
+function mcStartPolling(botId) {
+  if (mcPollingIntervals[botId]) return;
+  mcSeenKeys[botId] = new Set();
+  mcPollingIntervals[botId] = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/bots/${botId}/logs`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.lines) return;
+      for (const line of data.lines) {
+        const key = (line.timestamp || '') + '|' + line.text;
+        if (mcSeenKeys[botId].has(key)) continue;
+        mcSeenKeys[botId].add(key);
+        mcAppendLog(botId, line.stream, line.text);
+      }
+      if (data.status === 'stopped') {
+        mcUpdateCardStatus(botId, 'stopped');
+        mcStopPolling(botId);
+      }
+    } catch (e) {}
+  }, 1500);
+}
+
+function mcStopPolling(botId) {
+  if (mcPollingIntervals[botId]) {
+    clearInterval(mcPollingIntervals[botId]);
+    delete mcPollingIntervals[botId];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// CARD CREATION
+// ─────────────────────────────────────────────────────────────
+function mcCreateCard(bot) {
+  if (mcConsoles[bot.id]) return; // already exists
+
+  const card = document.createElement('div');
+  card.className = `console-card card-${bot.status}`;
+  card.id = `mc-card-${bot.id}`;
+  card.innerHTML = `
+    <div class="card-titlebar">
+      <div class="card-dot ${bot.status}" id="mc-dot-${bot.id}"></div>
+      <div class="card-name">${escapeHtml(bot.name)}</div>
+      <span class="card-status-text ${bot.status}" id="mc-status-${bot.id}">${bot.status.toUpperCase()}</span>
+      <button class="card-btn-go" onclick="switchGlobalView('bots'); selectBot('${bot.id}')">
+        ↗ Open
+      </button>
+    </div>
+    <div class="card-console" id="mc-console-${bot.id}">
+      <div class="card-empty" id="mc-empty-${bot.id}">
+        <span style="opacity:0.3;font-size:20px">⊡</span>
+        <span>${bot.status === 'running' ? 'Connecting...' : 'Bot is stopped'}</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="card-footer-stat">Lines: <span id="mc-linecount-${bot.id}">0</span></span>
+      <span class="card-footer-stat" id="mc-container-${bot.id}">${bot.containerId ? 'Container: ' + bot.containerId : ''}</span>
+      <button class="card-btn-clear" onclick="mcClearCard('${bot.id}')">Clear</button>
+    </div>
+  `;
+
+  document.getElementById('mc-grid').appendChild(card);
+  mcConsoles[bot.id] = { bot, logs: [], lineCount: 0, el: card };
+}
+
+function mcRemoveCard(botId) {
+  const con = mcConsoles[botId];
+  if (!con) return;
+  con.el.remove();
+  delete mcConsoles[botId];
+  mcSubscribedBots.delete(botId);
+  mcStopPolling(botId);
+}
+
+// ─────────────────────────────────────────────────────────────
+// CARD UPDATES
+// ─────────────────────────────────────────────────────────────
+function mcUpdateCardStatus(botId, status) {
+  const con = mcConsoles[botId];
+  if (!con) return;
+  con.bot.status = status;
+
+  const card = document.getElementById(`mc-card-${botId}`);
+  const dot = document.getElementById(`mc-dot-${botId}`);
+  const statusEl = document.getElementById(`mc-status-${botId}`);
+  if (!card) return;
+
+  card.className = `console-card card-${status}`;
+  if (dot) { dot.className = `card-dot ${status}`; }
+  if (statusEl) {
+    statusEl.className = `card-status-text ${status}`;
+    statusEl.textContent = status.toUpperCase();
+  }
+
+  // If now running and not subscribed yet, subscribe
+  if (status === 'running' && !mcSubscribedBots.has(botId)) {
+    if (mcHubConnection && mcHubConnection.state === 'Connected') {
+      mcHubConnection.invoke('SubscribeToBot', botId)
+        .then(() => { mcSubscribedBots.add(botId); mcLoadInitialLogs(botId); })
+        .catch(console.error);
+    } else {
+      mcStartPolling(botId);
+    }
+  }
+
+  // If stopped, unsubscribe
+  if (status === 'stopped') {
+    mcSubscribedBots.delete(botId);
+    mcStopPolling(botId);
+    if (mcHubConnection) {
+      mcHubConnection.invoke('UnsubscribeFromBot', botId).catch(() => {});
+    }
+  }
+
+  mcUpdateBadge();
+}
+
+function mcAppendLog(botId, stream, text, isInitial = false) {
+  const con = mcConsoles[botId];
+  if (!con) return;
+
+  // Hide empty state
+  const emptyEl = document.getElementById(`mc-empty-${botId}`);
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const consoleEl = document.getElementById(`mc-console-${botId}`);
+  if (!consoleEl) return;
+
+  const timeStr = new Date().toTimeString().slice(0, 8);
+  const line = document.createElement('div');
+  line.className = `card-log-line ${stream}`;
+  line.innerHTML = `
+    <span class="card-log-time">${timeStr}</span>
+    <span class="card-log-text">${escapeHtml(String(text))}</span>
+  `;
+
+  consoleEl.appendChild(line);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+
+  // Keep max 500 lines per card to avoid memory bloat
+  con.lineCount++;
+  const countEl = document.getElementById(`mc-linecount-${botId}`);
+  if (countEl) countEl.textContent = con.lineCount;
+
+  const allLines = consoleEl.querySelectorAll('.card-log-line');
+  if (allLines.length > 500) allLines[0].remove();
+}
+
+function mcClearCard(botId) {
+  const con = mcConsoles[botId];
+  if (!con) return;
+  con.lineCount = 0;
+  const consoleEl = document.getElementById(`mc-console-${botId}`);
+  if (consoleEl) {
+    consoleEl.innerHTML = `
+      <div class="card-empty" id="mc-empty-${botId}">
+        <span style="opacity:0.3;font-size:20px">⊡</span>
+        <span>Cleared</span>
+      </div>`;
+  }
+  const countEl = document.getElementById(`mc-linecount-${botId}`);
+  if (countEl) countEl.textContent = '0';
+}
+
+function mcClearAll() {
+  for (const id of Object.keys(mcConsoles)) mcClearCard(id);
+}
+
+function mcRenderEmptyState() {
+  const hasCards = Object.keys(mcConsoles).length > 0;
+  document.getElementById('mc-grid').style.display = hasCards ? 'grid' : 'none';
+  const emptyState = document.getElementById('mc-empty');
+  if (emptyState) emptyState.classList.toggle('hidden', hasCards);
+}
+
+function mcUpdateBadge() {
+  const running = Object.values(mcConsoles).filter(c => c.bot.status === 'running').length;
+  const badge = document.getElementById('mc-badge');
+  if (badge) badge.textContent = running;
+}
+
+// Hook into runBot/stopBot to update multi-console automatically
+const _origUpdateBotStatus = _updateBotStatusCore;
+window.updateBotStatus = function(botId, status) {
+  _origUpdateBotStatus(botId, status);
+  // Sync with multi-console
+  const bot = bots.find(b => b.id === botId);
+  if (bot) {
+    if (status === 'running' && !mcConsoles[botId]) {
+      mcCreateCard(bot);
+      mcRenderEmptyState();
+    }
+    mcUpdateCardStatus(botId, status);
+  }
+  mcUpdateBadge();
+};
+// Alias para compatibilidad con llamadas internas ya existentes
+var updateBotStatus = window.updateBotStatus;
 
 // ─────────────────────────────────────────────────────────────
 // INIT
