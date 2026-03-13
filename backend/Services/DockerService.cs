@@ -47,7 +47,7 @@ public class DockerService : IDockerService
     ///
     /// The only distinction is whether the bot needs Chrome:
     ///   - .use-chrome marker → python-chrome image, rw filesystem, extra shared memory
-    ///   - default            → python:3.12-slim, read-only filesystem
+    ///   - default            → python:3.12-slim, rw filesystem
     ///
     /// IMPORTANT: The backend runs inside Docker with /bots mounted from the host.
     /// botDirectory is the path inside the backend container (e.g. /bots/my_bot).
@@ -79,7 +79,7 @@ public class DockerService : IDockerService
         {
             image      = DEFAULT_IMAGE;
             volumeMode = "ro";           // Read-only: bot code cannot modify itself
-            extraFlags = "--read-only --tmpfs /tmp --tmpfs /root --security-opt no-new-privileges";
+            extraFlags = "--tmpfs /tmp:exec --tmpfs /root:exec --security-opt no-new-privileges";
             _logger.LogInformation("Bot {Id} starting with default image", botId);
         }
 
