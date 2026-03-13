@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BotPanel — Bot Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #080b0f;
+      --bg-dark: #0d1117;
+      --bg-panel: #111820;
+      --bg-card: #151d28;
+      --bg-hover: #1a2436;
+      --bg-input: #0d1520;
+      --border: #1e2d42;
+      --border-bright: #2a4060;
+      --accent-green: #00ff88;
+      --accent-cyan: #00d4ff;
+      --accent-amber: #ffaa00;
+      --accent-red: #ff3366;
+      --accent-purple: #8b5cf6;
+      --text-primary: #e2eaf5;
+      --text-secondary: #7a9bbf;
+      --text-muted: #3d5470;
+      --text-code: #a8d8a8;
+      --running-glow: 0 0 12px rgba(0, 255, 136, 0.3);
+      --error-glow: 0 0 12px rgba(255, 51, 102, 0.3);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-display: 'Space Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      height: 52px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 100;
+    }
+
+    .topbar-logo {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-logo::before {
+      content: '⬡';
+      font-size: 18px;
+      color: var(--accent-green);
+    }
+
+    .topbar-sep { width: 1px; height: 24px; background: var(--border); }
+
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .topbar-stat span { color: var(--text-secondary); font-weight: 600; }
+
+    /* ─── LAYOUT ─── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--bg-dark);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .btn-new {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      border-radius: 4px;
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-new:hover {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: rgba(0, 255, 136, 0.5);
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.15);
+    }
+
+    .search-box {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 7px 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus { border-color: var(--border-bright); }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    .bot-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .bot-list::-webkit-scrollbar { width: 4px; }
+    .bot-list::-webkit-scrollbar-track { background: transparent; }
+    .bot-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .bot-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+      position: relative;
+      gap: 10px;
+    }
+
+    .bot-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--border);
+    }
+
+    .bot-item.active {
+      background: var(--bg-card);
+      border-color: var(--border-bright);
+    }
+
+    .bot-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 2px;
+      background: var(--accent-cyan);
+      border-radius: 0 2px 2px 0;
+      box-shadow: 0 0 6px var(--accent-cyan);
+    }
+
+    .bot-status-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .bot-status-indicator.running {
+      background: var(--accent-green);
+      box-shadow: var(--running-glow);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    .bot-status-indicator.stopped { background: var(--text-muted); }
+    .bot-status-indicator.error {
+      background: var(--accent-red);
+      box-shadow: var(--error-glow);
+    }
+
+    .bot-info { flex: 1; min-width: 0; }
+
+    .bot-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bot-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .bot-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+
+    .bot-item:hover .bot-actions { opacity: 1; }
+
+    .btn-icon {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.12s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-hover);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-icon.danger:hover {
+      background: rgba(255, 51, 102, 0.1);
+      border-color: rgba(255, 51, 102, 0.3);
+      color: var(--accent-red);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    /* ─── BOT WORKSPACE ─── */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .workspace-header {
+      height: 48px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .workspace-bot-name {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 1px;
+    }
+
+    .workspace-status-badge {
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-running {
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .badge-stopped {
+      background: rgba(122, 155, 191, 0.08);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge-error {
+      background: rgba(255, 51, 102, 0.1);
+      color: var(--accent-red);
+      border: 1px solid rgba(255, 51, 102, 0.3);
+    }
+
+    .workspace-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-run {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: rgba(0, 255, 136, 0.35);
+      color: var(--accent-green);
+    }
+
+    .btn-run:hover {
+      background: rgba(0, 255, 136, 0.18);
+      border-color: rgba(0, 255, 136, 0.6);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+    }
+
+    .btn-stop {
+      background: rgba(255, 51, 102, 0.1);
+      border-color: rgba(255, 51, 102, 0.35);
+      color: var(--accent-red);
+    }
+
+    .btn-stop:hover {
+      background: rgba(255, 51, 102, 0.18);
+      border-color: rgba(255, 51, 102, 0.6);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
+    }
+
+    .btn-restart {
+      background: rgba(255, 170, 0, 0.08);
+      border-color: rgba(255, 170, 0, 0.3);
+      color: var(--accent-amber);
+    }
+
+    .btn-restart:hover {
+      background: rgba(255, 170, 0, 0.15);
+      border-color: rgba(255, 170, 0, 0.5);
+    }
+
+    .btn-save {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    .btn-save:hover {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: rgba(0, 212, 255, 0.5);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      gap: 0;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.12s;
+      margin-bottom: -1px;
+    }
+
+    .tab:hover { color: var(--text-secondary); }
+
+    .tab.active {
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+    }
+
+    /* ─── EDITOR AREA ─── */
+    .editor-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .editor-pane {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .file-tabs {
+      display: flex;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 16px 0;
+      gap: 4px;
+    }
+
+    .file-tab {
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      transition: all 0.12s;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .file-tab:hover { color: var(--text-secondary); background: var(--bg-hover); }
+
+    .file-tab.active {
+      color: var(--text-primary);
+      background: var(--bg-dark);
+      border-color: var(--border);
+    }
+
+    .file-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent-amber);
+      display: none;
+    }
+
+    .file-tab.modified .file-dot { display: block; }
+
+    #monaco-container {
+      flex: 1;
+      background: #0d1117;
+    }
+
+    /* ─── LOGS ─── */
+    .logs-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-void);
+    }
+
+    .logs-toolbar {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      background: var(--bg-dark);
+    }
+
+    .logs-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .log-filter {
+      display: flex;
+      gap: 4px;
+    }
+
+    .filter-btn {
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      transition: all 0.12s;
+    }
+
+    .filter-btn.active-all { border-color: var(--border-bright); color: var(--text-secondary); background: var(--bg-hover); }
+    .filter-btn.active-stdout { border-color: rgba(0, 255, 136, 0.4); color: var(--accent-green); background: rgba(0, 255, 136, 0.06); }
+    .filter-btn.active-stderr { border-color: rgba(255, 51, 102, 0.4); color: var(--accent-red); background: rgba(255, 51, 102, 0.06); }
+
+    .btn-clear {
+      margin-left: auto;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      transition: all 0.12s;
+    }
+
+    .btn-clear:hover { border-color: var(--border-bright); color: var(--text-secondary); }
+
+    .logs-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0;
+    }
+
+    .logs-scroll::-webkit-scrollbar { width: 4px; }
+    .logs-scroll::-webkit-scrollbar-track { background: transparent; }
+    .logs-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .log-line {
+      display: flex;
+      align-items: flex-start;
+      padding: 2px 16px;
+      gap: 12px;
+      line-height: 1.6;
+      font-size: 12px;
+      transition: background 0.08s;
+    }
+
+    .log-line:hover { background: rgba(255,255,255,0.02); }
+
+    .log-time {
+      color: var(--text-muted);
+      font-size: 10px;
+      flex-shrink: 0;
+      padding-top: 2px;
+      min-width: 70px;
+    }
+
+    .log-stream {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 2px 5px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .log-stream.stdout {
+      background: rgba(0, 255, 136, 0.08);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .log-stream.stderr {
+      background: rgba(255, 51, 102, 0.08);
+      color: var(--accent-red);
+      border: 1px solid rgba(255, 51, 102, 0.2);
+    }
+
+    .log-text {
+      color: var(--text-code);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-line.stderr .log-text { color: #ff8099; }
+    .log-line.system .log-text { color: var(--accent-cyan); font-style: italic; }
+
+    .logs-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    /* ─── SPLIT VIEW ─── */
+    .split-view {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .split-divider {
+      width: 4px;
+      background: var(--border);
+      cursor: col-resize;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .split-divider:hover { background: var(--accent-cyan); }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 28px;
+      width: 420px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      transform: translateY(12px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 9px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus { border-color: var(--accent-cyan); }
+    .form-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .btn-ghost {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.12s;
+    }
+
+    .btn-ghost:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+    .btn-primary {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-cyan);
+      transition: all 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: rgba(0, 212, 255, 0.18);
+      border-color: rgba(0, 212, 255, 0.6);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+    }
+
+    /* ─── TOAST ─── */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid;
+      animation: toast-in 0.2s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 320px;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast.success {
+      background: rgba(0, 255, 136, 0.08);
+      border-color: rgba(0, 255, 136, 0.3);
+      color: var(--accent-green);
+    }
+
+    .toast.error {
+      background: rgba(255, 51, 102, 0.08);
+      border-color: rgba(255, 51, 102, 0.3);
+      color: var(--accent-red);
+    }
+
+    .toast.info {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    /* ─── RESOURCE BAR ─── */
+    .resource-bar {
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 20px;
+      background: var(--bg-dark);
+      font-size: 10px;
+    }
+
+    .resource-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .resource-label { letter-spacing: 1px; text-transform: uppercase; }
+
+    .resource-value { color: var(--text-secondary); font-weight: 600; }
+
+    .resource-bar-track {
+      width: 60px; height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .resource-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s;
+    }
+
+    .resource-bar-fill.cpu { background: var(--accent-cyan); }
+    .resource-bar-fill.mem { background: var(--accent-purple); }
+
+    /* ─── SCANLINE EFFECT ─── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ─── DELETE CONFIRM ─── */
+    .confirm-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .confirm-name {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    .btn-danger {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255, 51, 102, 0.4);
+      background: rgba(255, 51, 102, 0.1);
+      color: var(--accent-red);
+      transition: all 0.15s;
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 51, 102, 0.18);
+      border-color: rgba(255, 51, 102, 0.6);
+    }
+
+    .save-indicator {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .save-indicator.unsaved { color: var(--accent-amber); }
+
+    /* ─── CONTAINER INFO ─── */
+    .container-info {
+      padding: 8px 16px;
+      background: rgba(0, 255, 136, 0.04);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .container-info.hidden { display: none; }
+
+    .container-id {
+      font-family: var(--font-mono);
+      color: var(--accent-green);
+      font-size: 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">BotPanel</div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-status">
+    <div class="status-dot"></div>
+    <span>Docker Connected</span>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-stat">
+      <span id="stat-running">0</span> running
+    </div>
+    <div class="topbar-sep" style="margin: 0 4px;"></div>
+    <div class="topbar-stat">
+      <span id="stat-total">0</span> bots
+    </div>
+    <div class="topbar-sep" style="margin: 0 4px;"></div>
+    <div class="topbar-stat" id="clock">00:00:00</div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Bots</span>
+      <button class="btn-new" onclick="openNewBotModal()">
+        <span>+</span> New Bot
+      </button>
+    </div>
+    <div class="search-box">
+      <input class="search-input" type="text" placeholder="Search bots..." id="search-input" oninput="filterBots(this.value)">
+    </div>
+    <div class="bot-list" id="bot-list"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">⬡</div>
+      <div class="empty-title">No bot selected</div>
+      <div class="empty-sub">Select a bot from the sidebar or create a new one</div>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div class="workspace hidden" id="workspace">
+
+      <!-- Header -->
+      <div class="workspace-header">
+        <div class="workspace-bot-name" id="ws-bot-name">—</div>
+        <div class="workspace-status-badge badge-stopped" id="ws-status-badge">STOPPED</div>
+        <div class="workspace-actions">
+          <span class="save-indicator" id="save-indicator">Saved</span>
+          <button class="btn btn-save" onclick="saveCurrentFile()" id="btn-save">💾 Save</button>
+          <button class="btn btn-run" onclick="runBot()" id="btn-run">▶ Run</button>
+          <button class="btn btn-stop hidden" onclick="stopBot()" id="btn-stop">■ Stop</button>
+          <button class="btn btn-restart" onclick="restartBot()" id="btn-restart" disabled>↺ Restart</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" data-tab="editor" onclick="switchTab('editor')">Code Editor</div>
+        <div class="tab" data-tab="logs" onclick="switchTab('logs')">Logs</div>
+        <div class="tab" data-tab="split" onclick="switchTab('split')">Split View</div>
+      </div>
+
+      <!-- Container info bar -->
+      <div class="container-info hidden" id="container-info">
+        <span>Container:</span>
+        <span class="container-id" id="container-id">—</span>
+        <span>│</span>
+        <span>Uptime: <strong id="container-uptime">0s</strong></span>
+        <span>│</span>
+        <span>CPU: <strong id="container-cpu">—</strong></span>
+        <span>│</span>
+        <span>MEM: <strong id="container-mem">—</strong></span>
+      </div>
+
+      <!-- Editor Tab -->
+      <div class="editor-area" id="tab-editor">
+        <div class="editor-pane">
+          <div class="file-tabs">
+            <div class="file-tab active" data-file="bot.py" onclick="switchFile('bot.py')">
+              <span>🐍</span> bot.py
+              <div class="file-dot"></div>
+            </div>
+            <div class="file-tab" data-file="requirements.txt" onclick="switchFile('requirements.txt')">
+              <span>📦</span> requirements.txt
+              <div class="file-dot"></div>
+            </div>
+          </div>
+          <div id="monaco-container"></div>
+        </div>
+      </div>
+
+      <!-- Logs Tab -->
+      <div class="logs-pane hidden" id="tab-logs">
+        <div class="logs-toolbar">
+          <span class="logs-label">Console Output</span>
+          <div class="log-filter">
+            <button class="filter-btn active-all" onclick="setLogFilter('all')" id="filter-all">ALL</button>
+            <button class="filter-btn" onclick="setLogFilter('stdout')" id="filter-stdout">STDOUT</button>
+            <button class="filter-btn" onclick="setLogFilter('stderr')" id="filter-stderr">STDERR</button>
+          </div>
+          <button class="btn-clear" onclick="clearLogs()">Clear</button>
+        </div>
+        <div class="logs-scroll" id="logs-container">
+          <div class="logs-empty" id="logs-empty">
+            <span style="font-size:24px;opacity:0.3">⊡</span>
+            <span>No output yet. Run a bot to see logs.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Tab -->
+      <div class="split-view hidden" id="tab-split">
+        <div class="editor-pane" id="split-editor" style="width:55%">
+          <div class="file-tabs">
+            <div class="file-tab active">
+              <span>🐍</span> bot.py
+            </div>
+          </div>
+          <div id="monaco-container-split"></div>
+        </div>
+        <div class="split-divider" id="split-divider"></div>
+        <div class="logs-pane" style="flex:1">
+          <div class="logs-toolbar">
+            <span class="logs-label">Live Output</span>
+            <button class="btn-clear" onclick="clearLogs()">Clear</button>
+          </div>
+          <div class="logs-scroll" id="logs-container-split">
+            <div class="logs-empty">
+              <span style="font-size:24px;opacity:0.3">⊡</span>
+              <span>No output yet.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /workspace -->
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- MODALS -->
+
+<!-- New Bot Modal -->
+<div class="modal-overlay" id="modal-new-bot">
+  <div class="modal">
+    <div class="modal-title">// Create New Bot</div>
+    <div class="form-group">
+      <label class="form-label">Bot Name</label>
+      <input class="form-input" type="text" id="new-bot-name" placeholder="my_awesome_bot" onkeyup="sanitizeBotName(this)">
+      <div class="form-hint">Only letters, numbers, and underscores. This will be the directory name.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <input class="form-input" type="text" id="new-bot-desc" placeholder="What does this bot do?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Template</label>
+      <select class="form-input" id="new-bot-template">
+        <option value="basic">Basic — Hello World</option>
+        <option value="loop">Loop — Repeating task</option>
+        <option value="requests">HTTP Bot — Requests library</option>
+        <option value="blank">Blank</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-new-bot')">Cancel</button>
+      <button class="btn-primary" onclick="createBot()">Create Bot</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal">
+    <div class="modal-title">// Delete Bot</div>
+    <p class="confirm-text">This will permanently delete <span class="confirm-name" id="delete-bot-name">—</span> and all its files. This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete Forever</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+// Relative paths — nginx proxies /api/ → backend:5000 and /hubs/ → SignalR
+const API_BASE = '/api';
+const HUB_URL = '/hubs/logs';
+
+let bots = [];
+let selectedBot = null;
+let currentFile = 'bot.py';
+let currentTab = 'editor';
+let logFilter = 'all';
+let logLines = [];
+let monacoEditor = null;
+let monacoReady = false;
+let pendingDelete = null;
+let fileContents = { 'bot.py': '', 'requirements.txt': '' };
+let savedContents = { 'bot.py': '', 'requirements.txt': '' };
+let signalRConnection = null;
+let uptimeInterval = null;
+let botStartTime = null;
+let cpuSimInterval = null;
+
+// ─────────────────────────────────────────────────────────────
+// CLOCK
+// ─────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toTimeString().slice(0, 8);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─────────────────────────────────────────────────────────────
+// MONACO EDITOR
+// ─────────────────────────────────────────────────────────────
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+
+require(['vs/editor/editor.main'], function() {
+  monaco.editor.defineTheme('botpanel-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '3d5470', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '00d4ff', fontStyle: 'bold' },
+      { token: 'string', foreground: 'a8d8a8' },
+      { token: 'number', foreground: 'ffaa00' },
+      { token: 'type', foreground: '8b5cf6' },
+      { token: 'function', foreground: '00ff88' },
+    ],
+    colors: {
+      'editor.background': '#0d1117',
+      'editor.foreground': '#e2eaf5',
+      'editor.lineHighlightBackground': '#151d28',
+      'editor.selectionBackground': '#1e3a5f',
+      'editor.inactiveSelectionBackground': '#1a2d47',
+      'editorCursor.foreground': '#00d4ff',
+      'editorLineNumber.foreground': '#3d5470',
+      'editorLineNumber.activeForeground': '#7a9bbf',
+      'editorGutter.background': '#0a0f15',
+      'editorIndentGuide.background': '#1e2d42',
+      'scrollbarSlider.background': '#1e2d4280',
+      'scrollbarSlider.hoverBackground': '#2a4060',
+    }
+  });
+
+  monacoEditor = monaco.editor.create(document.getElementById('monaco-container'), {
+    value: '',
+    language: 'python',
+    theme: 'botpanel-dark',
+    fontSize: 13,
+    fontFamily: "'JetBrains Mono', monospace",
+    fontLigatures: true,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    renderLineHighlight: 'line',
+    cursorStyle: 'line',
+    cursorBlinking: 'smooth',
+    smoothScrolling: true,
+    tabSize: 4,
+    insertSpaces: true,
+    automaticLayout: true,
+    padding: { top: 12, bottom: 12 },
+    lineNumbers: 'on',
+    glyphMargin: false,
+    folding: true,
+    wordWrap: 'on',
+  });
+
+  monacoEditor.onDidChangeModelContent(() => {
+    if (selectedBot) {
+      fileContents[currentFile] = monacoEditor.getValue();
+      const modified = fileContents[currentFile] !== savedContents[currentFile];
+      updateSaveIndicator(modified);
+      markFileTabModified(currentFile, modified);
+    }
+  });
+
+  monacoReady = true;
+  loadBots();
+});
+
+// ─────────────────────────────────────────────────────────────
+// API CALLS
+// ─────────────────────────────────────────────────────────────
+async function apiCall(method, path, body = null) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + path, opts);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || res.statusText);
+    }
+    return res.status === 204 ? null : await res.json();
+  } catch (e) {
+    // Demo mode: simulate API responses
+    return simulateAPI(method, path, body);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEMO MODE (when no backend is running)
+// ─────────────────────────────────────────────────────────────
+const DEMO_TEMPLATES = {
+  basic: `import time
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+def main():
+    logger.info("Bot started!")
+    for i in range(10):
+        logger.info(f"Processing item {i + 1}/10...")
+        time.sleep(1)
+    logger.info("Bot finished successfully.")
+
+if __name__ == '__main__':
+    main()
+`,
+  loop: `import time
+import logging
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+INTERVAL = 5  # seconds
+
+def task():
+    logger.info(f"Running task at {datetime.now().strftime('%H:%M:%S')}")
+    # Your task logic here
+
+def main():
+    logger.info("Loop bot started. Press Ctrl+C to stop.")
+    while True:
+        try:
+            task()
+            time.sleep(INTERVAL)
+        except KeyboardInterrupt:
+            logger.info("Bot stopped by user.")
+            break
+
+if __name__ == '__main__':
+    main()
+`,
+  requests: `import time
+import logging
+import requests
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+TARGET_URL = "https://api.github.com"
+
+def fetch_data():
+    logger.info(f"Fetching: {TARGET_URL}")
+    try:
+        resp = requests.get(TARGET_URL, timeout=10)
+        resp.raise_for_status()
+        logger.info(f"Response: {resp.status_code} | Size: {len(resp.content)} bytes")
+        return resp.json()
+    except requests.RequestException as e:
+        logger.error(f"Request failed: {e}")
+        return None
+
+def main():
+    logger.info("HTTP Bot started")
+    data = fetch_data()
+    if data:
+        logger.info("Data fetched successfully")
+    logger.info("Done.")
+
+if __name__ == '__main__':
+    main()
+`,
+  blank: `# Bot: my_bot
+# Created: ${new Date().toISOString().split('T')[0]}
+
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()
+`
+};
+
+const DEMO_REQS = {
+  basic: '# No extra requirements\n',
+  loop: '# No extra requirements\n',
+  requests: 'requests==2.31.0\n',
+  blank: '# Add your dependencies here\n# Example:\n# requests==2.31.0\n',
+};
+
+let demoStorage = {
+  bots: [
+    {
+      id: 'price_tracker',
+      name: 'price_tracker',
+      description: 'Monitors product prices',
+      status: 'stopped',
+      containerId: null,
+      createdAt: '2025-01-10T10:00:00Z',
+      files: {
+        'bot.py': `import time
+import logging
+import requests
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+def check_price(product_id):
+    logger.info(f"Checking price for product {product_id}...")
+    # Simulate price check
+    import random
+    price = round(random.uniform(9.99, 99.99), 2)
+    logger.info(f"Current price: ${price}")
+    return price
+
+def main():
+    logger.info("Price Tracker Bot started")
+    products = ['PROD-001', 'PROD-002', 'PROD-003']
+    for pid in products:
+        price = check_price(pid)
+        time.sleep(0.5)
+    logger.info("Price check complete")
+
+if __name__ == '__main__':
+    main()
+`,
+        'requirements.txt': 'requests==2.31.0\n',
+      }
+    },
+    {
+      id: 'news_scraper',
+      name: 'news_scraper',
+      description: 'Scrapes news headlines',
+      status: 'stopped',
+      containerId: null,
+      createdAt: '2025-01-12T14:30:00Z',
+      files: {
+        'bot.py': `import time
+import logging
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+SOURCES = ['TechCrunch', 'HackerNews', 'ArsTechnica']
+
+def scrape_source(source):
+    logger.info(f"Scraping {source}...")
+    time.sleep(0.3)
+    logger.info(f"Found 10 articles from {source}")
+
+def main():
+    logger.info(f"News Scraper started at {datetime.now()}")
+    for source in SOURCES:
+        scrape_source(source)
+    logger.info("Scraping complete. 30 articles collected.")
+
+if __name__ == '__main__':
+    main()
+`,
+        'requirements.txt': 'requests==2.31.0\nbeautifulsoup4==4.12.0\n',
+      }
+    },
+  ]
+};
+
+function simulateAPI(method, path, body) {
+  // GET /bots
+  if (method === 'GET' && path === '/bots') {
+    return demoStorage.bots.map(b => ({
+      id: b.id, name: b.name, description: b.description,
+      status: b.status, containerId: b.containerId, createdAt: b.createdAt
+    }));
+  }
+  // POST /bots
+  if (method === 'POST' && path === '/bots') {
+    const bot = {
+      id: body.name,
+      name: body.name,
+      description: body.description || '',
+      status: 'stopped',
+      containerId: null,
+      createdAt: new Date().toISOString(),
+      files: {
+        'bot.py': DEMO_TEMPLATES[body.template] || DEMO_TEMPLATES.basic,
+        'requirements.txt': DEMO_REQS[body.template] || DEMO_REQS.basic,
+      }
+    };
+    demoStorage.bots.push(bot);
+    return bot;
+  }
+  // DELETE /bots/:id
+  if (method === 'DELETE' && path.startsWith('/bots/')) {
+    const id = path.split('/')[2];
+    demoStorage.bots = demoStorage.bots.filter(b => b.id !== id);
+    return null;
+  }
+  // GET /bots/:id/files/:file
+  if (method === 'GET' && path.includes('/files/')) {
+    const parts = path.split('/');
+    const botId = parts[2];
+    const file = parts[4];
+    const bot = demoStorage.bots.find(b => b.id === botId);
+    return { content: bot?.files[file] || '' };
+  }
+  // PUT /bots/:id/files/:file
+  if (method === 'PUT' && path.includes('/files/')) {
+    const parts = path.split('/');
+    const botId = parts[2];
+    const file = parts[4];
+    const bot = demoStorage.bots.find(b => b.id === botId);
+    if (bot) bot.files[file] = body.content;
+    return null;
+  }
+  // POST /bots/:id/run
+  if (method === 'POST' && path.includes('/run')) {
+    const botId = path.split('/')[2];
+    const bot = demoStorage.bots.find(b => b.id === botId);
+    if (bot) {
+      bot.status = 'running';
+      bot.containerId = 'demo_' + Math.random().toString(36).slice(2, 10);
+      simulateLogs(bot);
+    }
+    return { containerId: bot.containerId };
+  }
+  // POST /bots/:id/stop
+  if (method === 'POST' && path.includes('/stop')) {
+    const botId = path.split('/')[2];
+    const bot = demoStorage.bots.find(b => b.id === botId);
+    if (bot) { bot.status = 'stopped'; bot.containerId = null; }
+    return null;
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEMO LOG SIMULATION
+// ─────────────────────────────────────────────────────────────
+let demoLogTimers = {};
+
+function simulateLogs(bot) {
+  if (demoLogTimers[bot.id]) clearInterval(demoLogTimers[bot.id]);
+  const botData = demoStorage.bots.find(b => b.id === bot.id);
+  if (!botData) return;
+
+  const code = botData.files['bot.py'] || '';
+  const lines = [
+    { stream: 'system', text: `Container ${bot.containerId} started` },
+    { stream: 'system', text: `Installing dependencies...` },
+    { stream: 'stdout', text: `Collecting package metadata` },
+    { stream: 'stdout', text: `Successfully installed packages` },
+    { stream: 'system', text: `Running bot.py...` },
+  ];
+
+  // Parse log lines from code comments
+  const imports = (code.match(/^import .+|^from .+ import .+/gm) || []).map(l => ({
+    stream: 'stdout',
+    text: `Loaded: ${l.trim()}`
+  }));
+
+  const logCalls = (code.match(/logger\.(info|warning|error)\(f?"([^"]+)"/g) || []).map(l => {
+    const level = l.includes('.error(') ? 'stderr' : 'stdout';
+    const msg = l.match(/["']([^"']+)/)?.[1] || l;
+    return { stream: level, text: msg.replace(/\{[^}]+\}/g, '[value]') };
+  });
+
+  const allLines = [...lines, ...logCalls.slice(0, 8), { stream: 'system', text: 'Bot exited with code 0' }];
+  let idx = 0;
+
+  const timer = setInterval(() => {
+    if (bot.id !== selectedBot?.id) { clearInterval(timer); return; }
+    if (idx >= allLines.length) {
+      clearInterval(timer);
+      // Mark as stopped after simulation
+      const b = demoStorage.bots.find(x => x.id === bot.id);
+      if (b && b.status === 'running') {
+        b.status = 'stopped';
+        b.containerId = null;
+        updateBotStatus(b.id, 'stopped');
+      }
+      return;
+    }
+    addLogLine(allLines[idx].stream, allLines[idx].text);
+    idx++;
+  }, 600);
+
+  demoLogTimers[bot.id] = timer;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SIGNALR (Real backend)
+// ─────────────────────────────────────────────────────────────
+function connectSignalR() {
+  // SignalR would be initialized here with real backend
+  // This is a placeholder for the real implementation
+  // import * as signalR from '@microsoft/signalr';
+  // signalRConnection = new signalR.HubConnectionBuilder()
+  //   .withUrl(HUB_URL)
+  //   .withAutomaticReconnect()
+  //   .build();
+  // signalRConnection.on('ReceiveLog', (botId, stream, text) => {
+  //   if (botId === selectedBot?.id) addLogLine(stream, text);
+  // });
+  // signalRConnection.on('BotStatusChanged', (botId, status) => {
+  //   updateBotStatus(botId, status);
+  // });
+  // signalRConnection.start();
+}
+
+// ─────────────────────────────────────────────────────────────
+// BOT LIST
+// ─────────────────────────────────────────────────────────────
+async function loadBots() {
+  bots = await apiCall('GET', '/bots') || [];
+  renderBotList();
+  updateStats();
+}
+
+function renderBotList(filter = '') {
+  const list = document.getElementById('bot-list');
+  const filtered = bots.filter(b =>
+    b.name.toLowerCase().includes(filter.toLowerCase()) ||
+    (b.description || '').toLowerCase().includes(filter.toLowerCase())
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-muted);font-size:12px;">No bots found</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(bot => `
+    <div class="bot-item ${selectedBot?.id === bot.id ? 'active' : ''}" onclick="selectBot('${bot.id}')">
+      <div class="bot-status-indicator ${bot.status}"></div>
+      <div class="bot-info">
+        <div class="bot-name">${bot.name}</div>
+        <div class="bot-meta">${bot.description || 'No description'}</div>
+      </div>
+      <div class="bot-actions">
+        <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="Quick Run">▶</button>
+        <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterBots(val) { renderBotList(val); }
+
+function updateStats() {
+  const running = bots.filter(b => b.status === 'running').length;
+  document.getElementById('stat-running').textContent = running;
+  document.getElementById('stat-total').textContent = bots.length;
+}
+
+function updateBotStatus(botId, status) {
+  const bot = bots.find(b => b.id === botId);
+  if (!bot) return;
+  bot.status = status;
+  renderBotList(document.getElementById('search-input').value);
+  updateStats();
+  if (selectedBot?.id === botId) {
+    selectedBot.status = status;
+    renderWorkspaceStatus(bot);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// SELECT BOT
+// ─────────────────────────────────────────────────────────────
+async function selectBot(id) {
+  const bot = bots.find(b => b.id === id);
+  if (!bot) return;
+  selectedBot = bot;
+
+  // Load files
+  const [pyRes, reqRes] = await Promise.all([
+    apiCall('GET', `/bots/${id}/files/bot.py`),
+    apiCall('GET', `/bots/${id}/files/requirements.txt`),
+  ]);
+
+  fileContents['bot.py'] = pyRes?.content || '';
+  fileContents['requirements.txt'] = reqRes?.content || '';
+  savedContents['bot.py'] = fileContents['bot.py'];
+  savedContents['requirements.txt'] = fileContents['requirements.txt'];
+
+  // Show workspace
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('workspace').classList.remove('hidden');
+
+  // Update header
+  document.getElementById('ws-bot-name').textContent = bot.name;
+  renderWorkspaceStatus(bot);
+
+  // Load editor
+  currentFile = 'bot.py';
+  switchFile('bot.py');
+  updateSaveIndicator(false);
+  markFileTabModified('bot.py', false);
+  markFileTabModified('requirements.txt', false);
+
+  // Clear logs
+  logLines = [];
+  renderLogs();
+
+  // Re-render list
+  renderBotList(document.getElementById('search-input').value);
+
+  // Container info
+  if (bot.status === 'running' && bot.containerId) {
+    startContainerInfo(bot.containerId);
+  }
+}
+
+function renderWorkspaceStatus(bot) {
+  const badge = document.getElementById('ws-status-badge');
+  const btnRun = document.getElementById('btn-run');
+  const btnStop = document.getElementById('btn-stop');
+  const btnRestart = document.getElementById('btn-restart');
+  const containerInfo = document.getElementById('container-info');
+
+  badge.className = 'workspace-status-badge';
+  if (bot.status === 'running') {
+    badge.classList.add('badge-running');
+    badge.textContent = 'RUNNING';
+    btnRun.classList.add('hidden');
+    btnStop.classList.remove('hidden');
+    btnRestart.disabled = false;
+    containerInfo.classList.remove('hidden');
+    document.getElementById('container-id').textContent = bot.containerId || '—';
+    startContainerInfo(bot.containerId);
+  } else if (bot.status === 'error') {
+    badge.classList.add('badge-error');
+    badge.textContent = 'ERROR';
+    btnRun.classList.remove('hidden');
+    btnStop.classList.add('hidden');
+    btnRestart.disabled = false;
+    containerInfo.classList.add('hidden');
+    stopContainerInfo();
+  } else {
+    badge.classList.add('badge-stopped');
+    badge.textContent = 'STOPPED';
+    btnRun.classList.remove('hidden');
+    btnStop.classList.add('hidden');
+    btnRestart.disabled = true;
+    containerInfo.classList.add('hidden');
+    stopContainerInfo();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONTAINER UPTIME
+// ─────────────────────────────────────────────────────────────
+function startContainerInfo(containerId) {
+  stopContainerInfo();
+  botStartTime = Date.now();
+  uptimeInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - botStartTime) / 1000);
+    const m = Math.floor(secs / 60), s = secs % 60;
+    document.getElementById('container-uptime').textContent =
+      m > 0 ? `${m}m ${s}s` : `${s}s`;
+    // Simulate CPU/MEM
+    const cpu = (Math.random() * 5 + 1).toFixed(1);
+    const mem = (Math.random() * 30 + 20).toFixed(0);
+    document.getElementById('container-cpu').textContent = `${cpu}%`;
+    document.getElementById('container-mem').textContent = `${mem}MB`;
+  }, 1000);
+}
+
+function stopContainerInfo() {
+  if (uptimeInterval) { clearInterval(uptimeInterval); uptimeInterval = null; }
+  botStartTime = null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// FILE SWITCHING
+// ─────────────────────────────────────────────────────────────
+function switchFile(filename) {
+  if (!monacoReady) return;
+  // Save current content
+  if (monacoEditor && currentFile) {
+    fileContents[currentFile] = monacoEditor.getValue();
+  }
+  currentFile = filename;
+  const lang = filename.endsWith('.py') ? 'python' : 'plaintext';
+  const model = monaco.editor.createModel(fileContents[filename] || '', lang);
+  monacoEditor.setModel(model);
+
+  // Update file tabs
+  document.querySelectorAll('.file-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.file === filename);
+  });
+
+  updateSaveIndicator(fileContents[filename] !== savedContents[filename]);
+}
+
+function markFileTabModified(filename, modified) {
+  document.querySelectorAll(`.file-tab[data-file="${filename}"] .file-dot`).forEach(dot => {
+    dot.style.display = modified ? 'block' : 'none';
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('tab-editor').classList.toggle('hidden', tab !== 'editor');
+  document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
+  document.getElementById('tab-split').classList.toggle('hidden', tab !== 'split');
+  if (tab !== 'editor' && tab !== 'split' && monacoEditor) {
+    fileContents[currentFile] = monacoEditor.getValue();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// SAVE
+// ─────────────────────────────────────────────────────────────
+async function saveCurrentFile() {
+  if (!selectedBot) return;
+  if (monacoEditor) fileContents[currentFile] = monacoEditor.getValue();
+
+  await apiCall('PUT', `/bots/${selectedBot.id}/files/${currentFile}`, {
+    content: fileContents[currentFile]
+  });
+
+  savedContents[currentFile] = fileContents[currentFile];
+  updateSaveIndicator(false);
+  markFileTabModified(currentFile, false);
+  showToast('success', `${currentFile} saved`);
+}
+
+function updateSaveIndicator(unsaved) {
+  const el = document.getElementById('save-indicator');
+  el.textContent = unsaved ? 'Unsaved changes' : 'Saved';
+  el.className = unsaved ? 'save-indicator unsaved' : 'save-indicator';
+}
+
+// Ctrl+S to save
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    if (selectedBot) saveCurrentFile();
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// RUN / STOP / RESTART
+// ─────────────────────────────────────────────────────────────
+async function runBot() {
+  if (!selectedBot) return;
+  // Auto-save before run
+  if (monacoEditor) fileContents[currentFile] = monacoEditor.getValue();
+  await apiCall('PUT', `/bots/${selectedBot.id}/files/${currentFile}`, {
+    content: fileContents[currentFile]
+  });
+  savedContents[currentFile] = fileContents[currentFile];
+
+  const result = await apiCall('POST', `/bots/${selectedBot.id}/run`);
+  const bot = bots.find(b => b.id === selectedBot.id);
+  if (bot) {
+    bot.status = 'running';
+    bot.containerId = result?.containerId || 'demo_' + Math.random().toString(36).slice(2, 10);
+    selectedBot = bot;
+    renderWorkspaceStatus(bot);
+    renderBotList(document.getElementById('search-input').value);
+    updateStats();
+    addLogLine('system', `Container started: ${bot.containerId}`);
+    if (currentTab === 'editor') switchTab('logs');
+  }
+}
+
+async function stopBot() {
+  if (!selectedBot) return;
+  await apiCall('POST', `/bots/${selectedBot.id}/stop`);
+  const bot = bots.find(b => b.id === selectedBot.id);
+  if (bot) {
+    bot.status = 'stopped';
+    bot.containerId = null;
+    selectedBot = bot;
+    renderWorkspaceStatus(bot);
+    renderBotList(document.getElementById('search-input').value);
+    updateStats();
+    addLogLine('system', 'Container stopped by user');
+  }
+}
+
+async function restartBot() {
+  await stopBot();
+  setTimeout(() => runBot(), 500);
+}
+
+async function quickRun(botId) {
+  const bot = bots.find(b => b.id === botId);
+  if (!bot) return;
+  if (bot.status === 'running') {
+    showToast('info', `${bot.name} is already running`);
+    return;
+  }
+  await selectBot(botId);
+  setTimeout(() => runBot(), 300);
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOGS
+// ─────────────────────────────────────────────────────────────
+function addLogLine(stream, text) {
+  const line = { stream, text, time: new Date() };
+  logLines.push(line);
+  renderLogLine(line);
+}
+
+function renderLogLine(line) {
+  const container = document.getElementById('logs-container');
+  const containerSplit = document.getElementById('logs-container-split');
+  const empty = document.getElementById('logs-empty');
+  if (empty) empty.style.display = 'none';
+
+  const shouldShow = logFilter === 'all' || logFilter === line.stream || line.stream === 'system';
+  if (!shouldShow) return;
+
+  const timeStr = line.time.toTimeString().slice(0, 8);
+  const streamBadge = line.stream === 'system' ? '' :
+    `<span class="log-stream ${line.stream}">${line.stream.toUpperCase()}</span>`;
+
+  const el = document.createElement('div');
+  el.className = `log-line ${line.stream}`;
+  el.innerHTML = `
+    <span class="log-time">${timeStr}</span>
+    ${streamBadge}
+    <span class="log-text">${escapeHtml(line.text)}</span>
+  `;
+
+  container.appendChild(el);
+  if (containerSplit) containerSplit.appendChild(el.cloneNode(true));
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderLogs() {
+  const container = document.getElementById('logs-container');
+  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>No output yet. Run a bot to see logs.</span></div>';
+  const filtered = logLines.filter(l =>
+    logFilter === 'all' || logFilter === l.stream || l.stream === 'system'
+  );
+  filtered.forEach(renderLogLine);
+}
+
+function setLogFilter(filter) {
+  logFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.className = 'filter-btn';
+    if (btn.id === `filter-${filter}`) {
+      btn.className = `filter-btn active-${filter}`;
+    }
+  });
+  renderLogs();
+}
+
+function clearLogs() {
+  logLines = [];
+  const container = document.getElementById('logs-container');
+  container.innerHTML = '<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>No output yet. Run a bot to see logs.</span></div>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// NEW BOT MODAL
+// ─────────────────────────────────────────────────────────────
+function openNewBotModal() {
+  document.getElementById('new-bot-name').value = '';
+  document.getElementById('new-bot-desc').value = '';
+  document.getElementById('modal-new-bot').classList.add('open');
+  setTimeout(() => document.getElementById('new-bot-name').focus(), 200);
+}
+
+function sanitizeBotName(input) {
+  input.value = input.value.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+}
+
+async function createBot() {
+  const name = document.getElementById('new-bot-name').value.trim();
+  const desc = document.getElementById('new-bot-desc').value.trim();
+  const template = document.getElementById('new-bot-template').value;
+
+  if (!name) { showToast('error', 'Bot name is required'); return; }
+  if (bots.find(b => b.name === name)) { showToast('error', 'Bot name already exists'); return; }
+
+  const bot = await apiCall('POST', '/bots', { name, description: desc, template });
+  if (bot) {
+    bots.push({ ...bot, status: 'stopped' });
+    renderBotList();
+    updateStats();
+    closeModal('modal-new-bot');
+    showToast('success', `Bot "${name}" created`);
+    selectBot(bot.id);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DELETE MODAL
+// ─────────────────────────────────────────────────────────────
+function openDeleteModal(botId) {
+  const bot = bots.find(b => b.id === botId);
+  if (!bot) return;
+  pendingDelete = botId;
+  document.getElementById('delete-bot-name').textContent = bot.name;
+  document.getElementById('modal-delete').classList.add('open');
+}
+
+async function confirmDelete() {
+  if (!pendingDelete) return;
+  await apiCall('DELETE', `/bots/${pendingDelete}`);
+  bots = bots.filter(b => b.id !== pendingDelete);
+  if (selectedBot?.id === pendingDelete) {
+    selectedBot = null;
+    document.getElementById('workspace').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+  }
+  pendingDelete = null;
+  closeModal('modal-delete');
+  renderBotList();
+  updateStats();
+  showToast('success', 'Bot deleted');
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// Enter to confirm new bot
+document.getElementById('new-bot-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') createBot();
+});
+
+// ─────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────
+function showToast(type, msg) {
+  const container = document.getElementById('toast-container');
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; }, 2500);
+  setTimeout(() => toast.remove(), 2900);
+}
+
+// ─────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ─────────────────────────────────────────────────────────────
+// SPLIT DIVIDER
+// ─────────────────────────────────────────────────────────────
+const divider = document.getElementById('split-divider');
+let dragging = false;
+divider.addEventListener('mousedown', () => dragging = true);
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const parent = document.getElementById('tab-split');
+  const rect = parent.getBoundingClientRect();
+  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+  if (pct > 20 && pct < 80) {
+    document.getElementById('split-editor').style.width = pct + '%';
+  }
+});
+document.addEventListener('mouseup', () => dragging = false);
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+connectSignalR();
+showToast('info', 'Running in demo mode — connect backend to enable full functionality');
+</script>
+</body>
+</html>
