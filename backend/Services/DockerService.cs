@@ -127,7 +127,8 @@ public class DockerService : IDockerService
             while (!process.StandardOutput.EndOfStream && !ct.IsCancellationRequested)
             {
                 var line = await process.StandardOutput.ReadLineAsync(ct);
-                if (line != null) await channel.Writer.WriteAsync(("stdout", StripTimestamp(line)), ct);
+                var stripped = StripTimestamp(line);
+                if (!string.IsNullOrWhiteSpace(stripped)) await channel.Writer.WriteAsync(("stdout", stripped), ct);
             }
             channel.Writer.TryComplete();
         }, ct);
@@ -137,7 +138,8 @@ public class DockerService : IDockerService
             while (!process.StandardError.EndOfStream && !ct.IsCancellationRequested)
             {
                 var line = await process.StandardError.ReadLineAsync(ct);
-                if (line != null) await channel.Writer.WriteAsync(("stderr", StripTimestamp(line)), ct);
+                var strippedErr = StripTimestamp(line);
+                if (!string.IsNullOrWhiteSpace(strippedErr)) await channel.Writer.WriteAsync(("stderr", strippedErr), ct);
             }
         }, ct);
 
@@ -170,8 +172,9 @@ public class DockerService : IDockerService
         return (process.ExitCode, stdout, stderr);
     }
 
-    private static string StripTimestamp(string line)
+    private static string StripTimestamp(string? line)
     {
+        if (string.IsNullOrEmpty(line)) return string.Empty;
         // Docker --timestamps format: 2025-01-01T12:00:00.000000000Z <message>
         if (line.Length > 32 && line[10] == 'T')
         {

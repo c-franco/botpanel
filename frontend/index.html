@@ -698,6 +698,18 @@
     .log-line.stderr .log-text { color: #ff8099; }
     .log-line.system .log-text { color: var(--accent-cyan); font-style: italic; }
 
+    .log-link {
+      color: var(--accent-cyan);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: rgba(0, 212, 255, 0.4);
+      transition: text-decoration-color 0.15s, color 0.15s;
+    }
+    .log-link:hover {
+      color: #fff;
+      text-decoration-color: rgba(255,255,255,0.6);
+    }
+
     .logs-empty {
       flex: 1;
       display: flex;
@@ -2431,7 +2443,7 @@ function renderLogLine(line) {
   el.innerHTML = `
     <span class="log-time">${timeStr}</span>
     ${streamBadge}
-    <span class="log-text">${escapeHtml(line.text)}</span>
+    <span class="log-text">${linkify(line.text)}</span>
   `;
 
   container.appendChild(el);
@@ -2572,6 +2584,15 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// Escapa HTML y convierte URLs en enlaces clicables que abren en pestaña nueva
+function linkify(str) {
+  const escaped = escapeHtml(str);
+  return escaped.replace(
+    /(https?:\/\/[^\s&]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="log-link">$1</a>'
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2896,7 +2917,7 @@ function mcAppendLog(botId, stream, text, isInitial = false) {
   line.className = `card-log-line ${stream}`;
   line.innerHTML = `
     <span class="card-log-time">${timeStr}</span>
-    <span class="card-log-text">${escapeHtml(String(text))}</span>
+    <span class="card-log-text">${linkify(String(text))}</span>
   `;
 
   consoleEl.appendChild(line);
