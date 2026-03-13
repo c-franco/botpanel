@@ -18,9 +18,19 @@ public class DockerService : IDockerService
     private readonly ILogger<DockerService> _logger;
     private readonly IConfiguration _config;
 
-    // Resource limits
-    private const string CPU_LIMIT = "0.5";    // 50% of one CPU
-    private const string MEMORY_LIMIT = "256m"; // 256 MB RAM
+    // Default resource limits
+    private const string CPU_LIMIT    = "1.0";
+    private const string MEMORY_LIMIT = "512m";
+
+    // Image used for bots that need Chrome/Selenium.
+    // Build it once on the server with:
+    //   docker build -t python-chrome:latest -f docker-images/Dockerfile.chrome-bot docker-images/
+    private const string CHROME_IMAGE  = "python-chrome:latest";
+    private const string DEFAULT_IMAGE = "python:3.12-slim";
+
+    // If a bot directory contains a file named ".use-chrome",
+    // it will run inside the Chrome-capable image with network access.
+    private const string CHROME_MARKER = ".use-chrome";
 
     public DockerService(ILogger<DockerService> logger, IConfiguration config)
     {
@@ -30,28 +40,47 @@ public class DockerService : IDockerService
 
     /// <summary>
     /// Creates and runs a Docker container for the given bot.
-    /// Each bot gets its own isolated container with resource limits.
+    /// If the bot directory contains ".use-chrome", it runs inside the
+    /// python-chrome image with network enabled and a writable filesystem
+    /// (required by Chrome/Selenium). Otherwise uses python:3.12-slim
+    /// with a locked-down read-only configuration.
     /// </summary>
     public async Task<string> RunBotAsync(string botId, string botDirectory, CancellationToken ct = default)
     {
         var containerName = $"botpanel_{botId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        var absPath = Path.GetFullPath(botDirectory);
+        var absPath       = Path.GetFullPath(botDirectory);
+        var needsChrome   = File.Exists(Path.Combine(absPath, CHROME_MARKER));
 
-        // Build docker run command with security constraints
+        string image, networkMode, volumeMode, extraFlags;
+
+        if (needsChrome)
+        {
+            image       = CHROME_IMAGE;
+            networkMode = "bridge";              // Chrome and Telegram need internet
+            volumeMode  = "rw";                  // Chrome needs to write temp files
+            extraFlags  = "--shm-size=512m";     // Chrome needs shared memory
+            _logger.LogInformation("Bot {Id} will run with Chrome image", botId);
+        }
+        else
+        {
+            image       = DEFAULT_IMAGE;
+            networkMode = "none";                // No internet by default
+            volumeMode  = "ro";                  // Read-only filesystem
+            extraFlags  = "--read-only --tmpfs /tmp --security-opt no-new-privileges";
+        }
+
         var args = string.Join(" ",
             "run",
             "--detach",
             $"--name {containerName}",
             $"--cpus={CPU_LIMIT}",
             $"--memory={MEMORY_LIMIT}",
-            "--network=none",           // No network by default (override in config if needed)
-            "--read-only",              // Read-only filesystem (except /tmp)
-            "--tmpfs /tmp",             // Writable tmp
+            $"--network={networkMode}",
             "--no-healthcheck",
-            "--security-opt no-new-privileges",  // Prevent privilege escalation
-            $"--volume \"{absPath}:/app:ro\"",   // Mount bot files as read-only
+            extraFlags,
+            $"--volume \"{absPath}:/app:{volumeMode}\"",
             "--workdir /app",
-            "python:3.12-slim",
+            image,
             "sh -c \"pip install -r requirements.txt -q && python -u bot.py\""
         );
 
