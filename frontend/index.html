@@ -1185,6 +1185,9 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
+<!-- SignalR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
 <!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 
@@ -1605,21 +1608,33 @@ function simulateLogs(bot) {
 // ─────────────────────────────────────────────────────────────
 // SIGNALR (Real backend)
 // ─────────────────────────────────────────────────────────────
-function connectSignalR() {
-  // SignalR would be initialized here with real backend
-  // This is a placeholder for the real implementation
-  // import * as signalR from '@microsoft/signalr';
-  // signalRConnection = new signalR.HubConnectionBuilder()
-  //   .withUrl(HUB_URL)
-  //   .withAutomaticReconnect()
-  //   .build();
-  // signalRConnection.on('ReceiveLog', (botId, stream, text) => {
-  //   if (botId === selectedBot?.id) addLogLine(stream, text);
-  // });
-  // signalRConnection.on('BotStatusChanged', (botId, status) => {
-  //   updateBotStatus(botId, status);
-  // });
-  // signalRConnection.start();
+async function connectSignalR() {
+  if (typeof signalR === 'undefined') {
+    console.warn('SignalR not loaded yet, retrying in 1s...');
+    setTimeout(connectSignalR, 1000);
+    return;
+  }
+  signalRConnection = new signalR.HubConnectionBuilder()
+    .withUrl(HUB_URL)
+    .withAutomaticReconnect()
+    .configureLogging(signalR.LogLevel.Warning)
+    .build();
+
+  signalRConnection.on('ReceiveLog', (botId, stream, text) => {
+    if (botId === selectedBot?.id) addLogLine(stream, text);
+  });
+
+  signalRConnection.on('BotStatusChanged', (botId, status) => {
+    updateBotStatus(botId, status);
+  });
+
+  try {
+    await signalRConnection.start();
+    console.log('SignalR connected');
+  } catch (e) {
+    console.warn('SignalR connection failed:', e);
+    setTimeout(connectSignalR, 3000);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1692,8 +1707,8 @@ async function selectBot(id) {
     apiCall('GET', `/bots/${id}/files/requirements.txt`),
   ]);
 
-  fileContents['bot.py'] = pyRes?.content || '';
-  fileContents['requirements.txt'] = reqRes?.content || '';
+  fileContents['bot.py'] = (pyRes?.content || '').replace(/\r\n/g, '\n');
+  fileContents['requirements.txt'] = (reqRes?.content || '').replace(/\r\n/g, '\n');
   savedContents['bot.py'] = fileContents['bot.py'];
   savedContents['requirements.txt'] = fileContents['requirements.txt'];
 
