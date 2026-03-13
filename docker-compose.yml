@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
 
-  # ─── Backend ASP.NET Core API ─────────────────────────────
+  # ─── BotPanel Backend (ASP.NET Core) ─────────────────────
   api:
     build:
       context: ./backend
@@ -12,12 +12,16 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./bots:/bots                              # Bot files persist on host
+      - ./bots:/bots                              # Bot files — container sees them at /bots
       - /var/run/docker.sock:/var/run/docker.sock # Docker socket to manage child containers
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       - BotsPath=/bots
+      # Must match the HOST-side absolute path of the ./bots volume above.
+      # When the backend launches a bot container, Docker resolves volume paths
+      # against the HOST filesystem, not the backend container filesystem.
+      - BOTS_HOST_PATH=/opt/botpanel/bots
     networks:
       - botpanel
 

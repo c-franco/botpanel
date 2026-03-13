@@ -44,12 +44,24 @@ public class DockerService : IDockerService
     /// python-chrome image with network enabled and a writable filesystem
     /// (required by Chrome/Selenium). Otherwise uses python:3.12-slim
     /// with a locked-down read-only configuration.
+    ///
+    /// IMPORTANT: The backend runs inside Docker with /bots mounted from the host.
+    /// botDirectory is the path inside the backend container (e.g. /bots/pokemon_bot).
+    /// When passing a volume to `docker run`, Docker resolves it against the HOST filesystem.
+    /// BOTS_HOST_PATH env var must match the host-side path of the bots volume.
     /// </summary>
     public async Task<string> RunBotAsync(string botId, string botDirectory, CancellationToken ct = default)
     {
         var containerName = $"botpanel_{botId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        var absPath       = Path.GetFullPath(botDirectory);
-        var needsChrome   = File.Exists(Path.Combine(absPath, CHROME_MARKER));
+
+        // Resolve host path: replace /bots (container path) with the actual host path
+        var botsHostPath = Environment.GetEnvironmentVariable("BOTS_HOST_PATH") ?? "/bots";
+        var botName      = Path.GetFileName(botDirectory.TrimEnd('/'));
+        var absPath      = Path.Combine(botsHostPath, botName);
+
+        // Check chrome marker using the container-internal path (where files actually are)
+        var internalPath = Path.GetFullPath(botDirectory);
+        var needsChrome  = File.Exists(Path.Combine(internalPath, CHROME_MARKER));
 
         string image, networkMode, volumeMode, extraFlags;
 
@@ -59,7 +71,7 @@ public class DockerService : IDockerService
             networkMode = "bridge";              // Chrome and Telegram need internet
             volumeMode  = "rw";                  // Chrome needs to write temp files
             extraFlags  = "--shm-size=512m";     // Chrome needs shared memory
-            _logger.LogInformation("Bot {Id} will run with Chrome image", botId);
+            _logger.LogInformation("Bot {Id} will run with Chrome image (host path: {Path})", botId, absPath);
         }
         else
         {
