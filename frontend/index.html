@@ -1720,14 +1720,18 @@ async function selectBot(id) {
   document.getElementById('ws-bot-name').textContent = bot.name;
   renderWorkspaceStatus(bot);
 
-  // Load editor — setTimeout ensures Monaco container is visible before rendering
+  // Load editor directly — set value on existing model instead of swapping
   currentFile = 'bot.py';
-  setTimeout(() => {
-    switchFile('bot.py');
-    updateSaveIndicator(false);
-    markFileTabModified('bot.py', false);
-    markFileTabModified('requirements.txt', false);
-  }, 50);
+  if (monacoEditor) {
+    monacoEditor.setValue(fileContents['bot.py']);
+    monacoEditor.layout();
+  }
+  updateSaveIndicator(false);
+  markFileTabModified('bot.py', false);
+  markFileTabModified('requirements.txt', false);
+  document.querySelectorAll('.file-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.file === 'bot.py');
+  });
 
   // Clear logs
   logLines = [];
@@ -1812,11 +1816,8 @@ function switchFile(filename) {
     fileContents[currentFile] = monacoEditor.getValue();
   }
   currentFile = filename;
-  const lang = filename.endsWith('.py') ? 'python' : 'plaintext';
-  const oldModel = monacoEditor.getModel();
-  const newModel = monaco.editor.createModel(fileContents[filename] || '', lang);
-  monacoEditor.setModel(newModel);
-  if (oldModel) oldModel.dispose();
+  // Use setValue directly — avoids model disposal issues
+  monacoEditor.setValue(fileContents[filename] || '');
   monacoEditor.layout();
 
   // Update file tabs
