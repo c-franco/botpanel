@@ -1192,7 +1192,6 @@
 // ─────────────────────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────────────────────
-// Relative paths — nginx proxies /api/ → backend:5000 and /hubs/ → SignalR
 const API_BASE = '/api';
 const HUB_URL = '/hubs/logs';
 
@@ -1296,22 +1295,18 @@ require(['vs/editor/editor.main'], function() {
 // API CALLS
 // ─────────────────────────────────────────────────────────────
 async function apiCall(method, path, body = null) {
-  try {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-    };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(API_BASE + path, opts);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(err.message || res.statusText);
-    }
-    return res.status === 204 ? null : await res.json();
-  } catch (e) {
-    // Demo mode: simulate API responses
-    return simulateAPI(method, path, body);
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || res.statusText);
   }
+  if (res.status === 204) return null;
+  return await res.json();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1691,6 +1686,7 @@ async function selectBot(id) {
   if (!bot) return;
   selectedBot = bot;
 
+  // Load files
   const [pyRes, reqRes] = await Promise.all([
     apiCall('GET', `/bots/${id}/files/bot.py`),
     apiCall('GET', `/bots/${id}/files/requirements.txt`),
@@ -1701,14 +1697,16 @@ async function selectBot(id) {
   savedContents['bot.py'] = fileContents['bot.py'];
   savedContents['requirements.txt'] = fileContents['requirements.txt'];
 
+  // Show workspace
   document.getElementById('empty-state').classList.add('hidden');
   document.getElementById('workspace').classList.remove('hidden');
+
+  // Update header
   document.getElementById('ws-bot-name').textContent = bot.name;
   renderWorkspaceStatus(bot);
 
+  // Load editor — setTimeout ensures Monaco container is visible before rendering
   currentFile = 'bot.py';
-
-  // Wait a tick to ensure Monaco is fully rendered before setting content
   setTimeout(() => {
     switchFile('bot.py');
     updateSaveIndicator(false);
@@ -1716,10 +1714,14 @@ async function selectBot(id) {
     markFileTabModified('requirements.txt', false);
   }, 50);
 
+  // Clear logs
   logLines = [];
   renderLogs();
+
+  // Re-render list
   renderBotList(document.getElementById('search-input').value);
 
+  // Container info
   if (bot.status === 'running' && bot.containerId) {
     startContainerInfo(bot.containerId);
   }
@@ -1790,24 +1792,23 @@ function stopContainerInfo() {
 // ─────────────────────────────────────────────────────────────
 function switchFile(filename) {
   if (!monacoReady || !monacoEditor) return;
-  if (currentFile && monacoEditor) {
+  // Save current content before switching
+  if (currentFile) {
     fileContents[currentFile] = monacoEditor.getValue();
   }
   currentFile = filename;
   const lang = filename.endsWith('.py') ? 'python' : 'plaintext';
-
-  // Dispose old model to avoid memory leaks
   const oldModel = monacoEditor.getModel();
   const newModel = monaco.editor.createModel(fileContents[filename] || '', lang);
   monacoEditor.setModel(newModel);
   if (oldModel) oldModel.dispose();
-
-  // Force editor to re-render with new content
   monacoEditor.layout();
 
+  // Update file tabs
   document.querySelectorAll('.file-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.file === filename);
   });
+
   updateSaveIndicator(fileContents[filename] !== savedContents[filename]);
 }
 
@@ -1842,12 +1843,9 @@ async function saveCurrentFile() {
     const res = await fetch(`${API_BASE}/bots/${selectedBot.id}/files/${currentFile}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      // JSON.stringify maneja correctamente saltos de línea y caracteres especiales
       body: JSON.stringify({ content: fileContents[currentFile] }),
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
     savedContents[currentFile] = fileContents[currentFile];
     updateSaveIndicator(false);
     markFileTabModified(currentFile, false);
@@ -2120,7 +2118,6 @@ document.addEventListener('mouseup', () => dragging = false);
 // INIT
 // ─────────────────────────────────────────────────────────────
 connectSignalR();
-showToast('info', 'Running in demo mode — connect backend to enable full functionality');
 </script>
 </body>
 </html>
