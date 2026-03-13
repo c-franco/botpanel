@@ -61,9 +61,14 @@ public class DockerService : IDockerService
             $"--name {containerName}",
             $"--cpus={CPU_LIMIT}",
             $"--memory={MEMORY_LIMIT}",
+            "--memory-swap=-1",          // Allow swap when RAM is tight
             "--network=bridge",
             "--no-healthcheck",
-            "--shm-size=512m",
+            "--shm-size=256m",           // 256m is enough for headless Chrome
+            // Chrome low-memory flags passed as env vars — bots can read them
+            // or Chrome picks them up automatically via CHROMIUM_FLAGS
+            "--env PYTHONUNBUFFERED=1",
+            // Chrome low-memory flags are injected automatically via chrome_defaults.py in the image
             $"--volume \"{absPath}:/app:rw\"",
             "--workdir /app",
             BOT_IMAGE,

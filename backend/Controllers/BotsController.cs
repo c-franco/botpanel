@@ -37,18 +37,6 @@ public class BotsController : ControllerBase
         return Ok(_repo.GetAll().Select(ToDto));
     }
 
-    // ─── GET /api/bots/running ───────────────────────────────
-    // Returns only bots that are currently running.
-    // Used by the Multi-Console view to know which bots to subscribe to.
-    [HttpGet("running")]
-    public ActionResult<IEnumerable<BotDto>> GetRunning()
-    {
-        var running = _repo.GetAll()
-            .Where(b => b.Status == BotStatus.Running)
-            .Select(ToDto);
-        return Ok(running);
-    }
-
     // ─── GET /api/bots/{id} ──────────────────────────────────
     [HttpGet("{id}")]
     public ActionResult<BotDto> GetById(string id)
@@ -244,7 +232,15 @@ public class BotsController : ControllerBase
                             timestamp = line[..spaceIdx];
                             text = line[(spaceIdx + 1)..];
                         }
+                        else
+                        {
+                            // Whole line is just a timestamp — discard
+                            continue;
+                        }
                     }
+                    // Discard lines whose text is itself a bare ISO timestamp
+                    if (IsIsoTimestamp(text.Trim())) continue;
+                    if (string.IsNullOrWhiteSpace(text)) continue;
                     lines.Add(new { stream, text, timestamp });
                 }
             }
@@ -286,6 +282,13 @@ public class BotsController : ControllerBase
     }
 
     // ─── Helper ──────────────────────────────────────────────
+    // Matches bare ISO-8601 timestamps emitted by Docker (e.g. 2026-03-13T21:35:27.685621012Z)
+    private static bool IsIsoTimestamp(string s) =>
+        s.Length >= 20 && s.Length <= 35 &&
+        s[4] == '-' && s[7] == '-' && s[10] == 'T' &&
+        s[13] == ':' && s[16] == ':' &&
+        (s[^1] == 'Z' || s[^1] == 'z');
+
     private static BotDto ToDto(Bot bot) => new()
     {
         Id = bot.Id,

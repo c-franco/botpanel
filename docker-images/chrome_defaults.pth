@@ -1,0 +1,4 @@
+# This file is placed in Python's site-packages via the Dockerfile.
+# It auto-injects memory-saving Chrome options for all bots without
+# requiring any changes to their bot.py code.
+import chrome_defaults
