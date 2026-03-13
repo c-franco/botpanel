@@ -22,16 +22,11 @@ public class DockerService : IDockerService
     private const string CPU_LIMIT    = "1.0";
     private const string MEMORY_LIMIT = "512m";
 
-    // Two images available:
-    //   - DEFAULT_IMAGE: python:3.12-slim for standard bots
-    //   - CHROME_IMAGE:  python-chrome:latest for bots that need Selenium/Chrome
-    //
-    // To use Chrome, place a file named ".use-chrome" in the bot directory.
-    // Build the Chrome image once with:
+    // All bots run on the Chrome-capable image so Chrome, chromedriver, and
+    // all system dependencies are always available regardless of which bot runs.
+    // Build once on the server with:
     //   docker build -t python-chrome:latest -f docker-images/Dockerfile.chrome-bot docker-images/
-    private const string DEFAULT_IMAGE = "python:3.12-slim";
-    private const string CHROME_IMAGE  = "python-chrome:latest";
-    private const string CHROME_MARKER = ".use-chrome";
+    private const string BOT_IMAGE = "python-chrome:latest";
 
     public DockerService(ILogger<DockerService> logger, IConfiguration config)
     {
@@ -42,12 +37,10 @@ public class DockerService : IDockerService
     /// <summary>
     /// Creates and runs a Docker container for the given bot.
     ///
-    /// All bots run with network=bridge so pip can install dependencies freely
-    /// and bots can make outbound connections (APIs, scraping, etc.).
-    ///
-    /// The only distinction is whether the bot needs Chrome:
-    ///   - .use-chrome marker → python-chrome image, rw filesystem, extra shared memory
-    ///   - default            → python:3.12-slim, rw filesystem
+    /// All bots use the same python-chrome image with:
+    ///   - network=bridge  → pip installs and outbound calls always work
+    ///   - rw filesystem   → Chrome, webdriver-manager and pip can write freely
+    ///   - shm-size=512m   → Chrome needs shared memory
     ///
     /// IMPORTANT: The backend runs inside Docker with /bots mounted from the host.
     /// botDirectory is the path inside the backend container (e.g. /bots/my_bot).
@@ -62,28 +55,6 @@ public class DockerService : IDockerService
         var botName      = Path.GetFileName(botDirectory.TrimEnd('/'));
         var absPath      = Path.Combine(botsHostPath, botName);
 
-        // Check for Chrome marker
-        var internalPath = Path.GetFullPath(botDirectory);
-        var needsChrome  = File.Exists(Path.Combine(internalPath, CHROME_MARKER));
-
-        string image, volumeMode, extraFlags;
-
-        if (needsChrome)
-        {
-            image      = CHROME_IMAGE;
-            volumeMode = "rw";           // Chrome needs to write temp files
-            extraFlags = "--shm-size=512m";
-            _logger.LogInformation("Bot {Id} starting with Chrome image", botId);
-        }
-        else
-        {
-            image      = DEFAULT_IMAGE;
-            volumeMode = "ro";           // Read-only: bot code cannot modify itself
-            extraFlags = "--tmpfs /tmp:exec --tmpfs /root:exec --security-opt no-new-privileges";
-            _logger.LogInformation("Bot {Id} starting with default image", botId);
-        }
-
-        // All bots use bridge networking so pip and outbound calls work out of the box
         var args = string.Join(" ",
             "run",
             "--detach",
@@ -92,10 +63,10 @@ public class DockerService : IDockerService
             $"--memory={MEMORY_LIMIT}",
             "--network=bridge",
             "--no-healthcheck",
-            extraFlags,
-            $"--volume \"{absPath}:/app:{volumeMode}\"",
+            "--shm-size=512m",
+            $"--volume \"{absPath}:/app:rw\"",
             "--workdir /app",
-            image,
+            BOT_IMAGE,
             "sh -c \"pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore && python -u bot.py\""
         );
 
