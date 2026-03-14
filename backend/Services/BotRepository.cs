@@ -105,9 +105,66 @@ if __name__ == '__main__':
                 DirectoryPath = dir,
                 CreatedAt = Directory.GetCreationTime(dir),
             };
+
+            // Check if there is a running container for this bot from a previous session.
+            // Container names are deterministic: botpanel_{botId}
+            var (containerId, isRunning) = GetContainerState(name);
+            if (isRunning && containerId != null)
+            {
+                bot.Status = BotStatus.Running;
+                bot.ContainerId = containerId;
+                _logger.LogInformation("Bot {Name} recovered — container {Id} still running", name, containerId[..Math.Min(12, containerId.Length)]);
+            }
+            else if (containerId != null)
+            {
+                // Container exists but is stopped — clean it up
+                KillContainer($"botpanel_{name}");
+            }
+
             _bots[bot.Id] = bot;
-            _logger.LogInformation("Loaded bot: {Name}", name);
+            _logger.LogInformation("Loaded bot: {Name} [{Status}]", name, bot.Status);
         }
+    }
+
+    private (string? containerId, bool isRunning) GetContainerState(string botId)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(
+                "docker", $"inspect --format={{{{.Id}}}}|{{{{.State.Running}}}} botpanel_{botId}")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var output = proc.StandardOutput.ReadToEnd().Trim();
+            proc.WaitForExit();
+            if (proc.ExitCode != 0 || string.IsNullOrEmpty(output)) return (null, false);
+            var parts = output.Split('|');
+            if (parts.Length < 2) return (null, false);
+            return (parts[0].Trim(), parts[1].Trim() == "true");
+        }
+        catch { return (null, false); }
+    }
+
+    private void KillContainer(string containerName)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(
+                "docker", $"rm -f {containerName}")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            proc.WaitForExit();
+        }
+        catch { }
     }
 
     private string ReadMetadata(string dir)

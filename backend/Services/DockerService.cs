@@ -48,7 +48,12 @@ public class DockerService : IDockerService
     /// </summary>
     public async Task<string> RunBotAsync(string botId, string botDirectory, CancellationToken ct = default)
     {
-        var containerName = $"botpanel_{botId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        // Deterministic name — no timestamp — so the backend can always find
+        // and stop this container even after a restart.
+        var containerName = $"botpanel_{botId}";
+
+        // Kill any leftover container with this name from a previous session
+        await RunDockerCommand($"rm -f {containerName}", ct);
 
         // Resolve host path for the volume mount
         var botsHostPath = Environment.GetEnvironmentVariable("BOTS_HOST_PATH") ?? "/bots";
