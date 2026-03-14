@@ -115,11 +115,8 @@ if __name__ == '__main__':
                 bot.ContainerId = containerId;
                 _logger.LogInformation("Bot {Name} recovered — container {Id} still running", name, containerId[..Math.Min(12, containerId.Length)]);
             }
-            else if (containerId != null)
-            {
-                // Container exists but is stopped — clean it up
-                KillContainer($"botpanel_{name}");
-            }
+            // Note: stopped/orphaned containers are cleaned up by DockerService
+            // before each new run via `docker rm -f botpanel_{botId}`
 
             _bots[bot.Id] = bot;
             _logger.LogInformation("Loaded bot: {Name} [{Status}]", name, bot.Status);
