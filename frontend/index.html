@@ -852,35 +852,6 @@
       box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
     }
 
-
-    .btn-stop-all {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 11px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 51, 102, 0.35);
-      background: rgba(255, 51, 102, 0.08);
-      color: var(--accent-red);
-      transition: all 0.15s;
-    }
-
-    .btn-stop-all:hover:not(:disabled) {
-      background: rgba(255, 51, 102, 0.18);
-      border-color: rgba(255, 51, 102, 0.6);
-      box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
-    }
-
-    .btn-stop-all:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
     /* ─── TOAST ─── */
     .toast-container {
       position: fixed;
@@ -1463,6 +1434,10 @@
     </button>
   </div>
   <div class="topbar-right">
+    <button class="btn-stop-all" id="topbar-stop-all" onclick="stopAllBots()" disabled title="Parar todos los bots activos">
+      ■ Parar todos
+    </button>
+    <div class="topbar-sep" style="margin: 0 4px;"></div>
     <div class="topbar-stat">
       <span id="stat-running">0</span> en ejecución
     </div>
@@ -1470,10 +1445,6 @@
     <div class="topbar-stat">
       <span id="stat-total">0</span> bots
     </div>
-    <div class="topbar-sep" style="margin: 0 4px;"></div>
-    <button class="btn-stop-all" id="topbar-stop-all" onclick="stopAllBots()" disabled title="Parar todos los bots activos">
-      ■ Parar todos
-    </button>
     <div class="topbar-sep" style="margin: 0 4px;"></div>
     <div class="topbar-stat" id="clock">00:00:00</div>
   </div>
@@ -1491,9 +1462,6 @@
       <span class="sidebar-title">Bots</span>
       <button class="btn-new" onclick="openNewBotModal()">
         <span>+</span> Nuevo Bot
-      </button>
-      <button class="btn-stop-all" id="sidebar-stop-all" onclick="stopAllBots()" disabled title="Parar todos los bots activos">
-        ■ Parar todos
       </button>
     </div>
     <div class="search-box">
@@ -3099,7 +3067,6 @@ async function stopAllBots() {
   if (running.length === 0) return;
 
   // Deshabilitar botones durante la operación
-  document.querySelectorAll('#topbar-stop-all, #sidebar-stop-all').forEach(btn => {
     btn.disabled = true;
     btn.textContent = '⏳ Parando...';
   });
@@ -3134,7 +3101,6 @@ async function stopAllBots() {
 // Actualizar estado habilitado/deshabilitado de los botones de parar todos
 function updateStopAllButtons() {
   const hasRunning = bots.some(b => b.status === 'running');
-  document.querySelectorAll('#topbar-stop-all, #sidebar-stop-all').forEach(btn => {
     btn.disabled = !hasRunning;
     btn.innerHTML = '■ Parar todos';
   });
