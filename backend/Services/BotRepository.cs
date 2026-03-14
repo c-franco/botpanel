@@ -14,6 +14,7 @@ public interface IBotRepository
     void UpdateStatus(string id, BotStatus status, string? containerId = null);
     string GetFilePath(string botId, string filename);
     string GetBotDirectory(string botId);
+    void UpdateDescription(string id, string description);
 }
 
 public class BotRepository : IBotRepository
@@ -169,6 +170,18 @@ if __name__ == '__main__':
             if (status == BotStatus.Running)
                 bot.LastRun = DateTime.UtcNow;
         }
+    }
+
+    public void UpdateDescription(string id, string description)
+    {
+        if (!_bots.TryGetValue(id, out var bot)) return;
+        bot.Description = description;
+        // Persist to .meta file
+        var metaPath = Path.Combine(bot.DirectoryPath, ".meta");
+        if (string.IsNullOrWhiteSpace(description))
+            File.Delete(metaPath);
+        else
+            File.WriteAllText(metaPath, description);
     }
 
     public string GetFilePath(string botId, string filename)

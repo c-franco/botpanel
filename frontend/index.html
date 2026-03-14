@@ -852,6 +852,35 @@
       box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
     }
 
+
+    .btn-stop-all {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 51, 102, 0.35);
+      background: rgba(255, 51, 102, 0.08);
+      color: var(--accent-red);
+      transition: all 0.15s;
+    }
+
+    .btn-stop-all:hover:not(:disabled) {
+      background: rgba(255, 51, 102, 0.18);
+      border-color: rgba(255, 51, 102, 0.6);
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
+    }
+
+    .btn-stop-all:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
     /* ─── TOAST ─── */
     .toast-container {
       position: fixed;
@@ -992,6 +1021,36 @@
     }
 
     .save-indicator.unsaved { color: var(--accent-amber); }
+
+
+    .btn-stop-all {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: rgba(255, 51, 102, 0.08);
+      border: 1px solid rgba(255, 51, 102, 0.25);
+      border-radius: 4px;
+      color: var(--accent-red);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-stop-all:hover {
+      background: rgba(255, 51, 102, 0.15);
+      border-color: rgba(255, 51, 102, 0.5);
+      box-shadow: 0 0 8px rgba(255, 51, 102, 0.15);
+    }
+
+    .btn-stop-all:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
 
     /* ─── GLOBAL NAV TABS ─── */
     .global-nav {
@@ -1136,7 +1195,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 340px;
+      height: 420px;
       transition: border-color 0.2s;
     }
 
@@ -1412,6 +1471,10 @@
       <span id="stat-total">0</span> bots
     </div>
     <div class="topbar-sep" style="margin: 0 4px;"></div>
+    <button class="btn-stop-all" id="topbar-stop-all" onclick="stopAllBots()" disabled title="Parar todos los bots activos">
+      ■ Parar todos
+    </button>
+    <div class="topbar-sep" style="margin: 0 4px;"></div>
     <div class="topbar-stat" id="clock">00:00:00</div>
   </div>
 </div>
@@ -1428,6 +1491,9 @@
       <span class="sidebar-title">Bots</span>
       <button class="btn-new" onclick="openNewBotModal()">
         <span>+</span> Nuevo Bot
+      </button>
+      <button class="btn-stop-all" id="sidebar-stop-all" onclick="stopAllBots()" disabled title="Parar todos los bots activos">
+        ■ Parar todos
       </button>
     </div>
     <div class="search-box">
@@ -1632,6 +1698,22 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
       <button class="btn-danger" onclick="confirmDelete()">Eliminar Definitivamente</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Description Modal -->
+<div class="modal-overlay" id="modal-edit-desc">
+  <div class="modal">
+    <div class="modal-title">// Editar Descripción</div>
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <input class="form-input" type="text" id="edit-desc-input" placeholder="¿Qué hace este bot?">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit-desc')">Cancelar</button>
+      <button class="btn-primary" onclick="saveDescription()">Guardar</button>
     </div>
   </div>
 </div>
@@ -2150,6 +2232,7 @@ function renderBotList(filter = '') {
       </div>
       <div class="bot-actions">
         <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="Ejecutar">▶</button>
+        <button class="btn-icon" onclick="event.stopPropagation(); openEditDescModal('${bot.id}')" title="Editar descripción">✎</button>
         <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="Eliminar">✕</button>
       </div>
     </div>
@@ -2158,10 +2241,17 @@ function renderBotList(filter = '') {
 
 function filterBots(val) { renderBotList(val); }
 
+function updateStopAllButtons() {
+  const running = bots.filter(b => b.status === 'running').length;
+  const btn = document.getElementById('topbar-stop-all');
+  if (btn) btn.disabled = running === 0;
+}
+
 function updateStats() {
   const running = bots.filter(b => b.status === 'running').length;
   document.getElementById('stat-running').textContent = running;
   document.getElementById('stat-total').textContent = bots.length;
+  updateStopAllButtons();
 }
 
 function _updateBotStatusCore(botId, status) {
@@ -2998,6 +3088,147 @@ window.updateBotStatus = function(botId, status) {
 };
 // Alias para compatibilidad con llamadas internas ya existentes
 var updateBotStatus = window.updateBotStatus;
+
+
+
+// ─────────────────────────────────────────────────────────────
+// PARAR TODOS LOS BOTS
+// ─────────────────────────────────────────────────────────────
+async function stopAllBots() {
+  const running = bots.filter(b => b.status === 'running');
+  if (running.length === 0) return;
+
+  // Deshabilitar botones durante la operación
+  document.querySelectorAll('#topbar-stop-all, #sidebar-stop-all').forEach(btn => {
+    btn.disabled = true;
+    btn.textContent = '⏳ Parando...';
+  });
+
+  const results = await Promise.allSettled(
+    running.map(bot => apiCall('POST', `/bots/${bot.id}/stop`))
+  );
+
+  // Actualizar estado en memoria
+  results.forEach((result, i) => {
+    const bot = running[i];
+    if (result.status === 'fulfilled') {
+      const b = bots.find(x => x.id === bot.id);
+      if (b) { b.status = 'stopped'; b.containerId = null; }
+      updateBotStatus(bot.id, 'stopped');
+    }
+  });
+
+  const stopped = results.filter(r => r.status === 'fulfilled').length;
+  const failed  = results.filter(r => r.status === 'rejected').length;
+
+  renderBotList(document.getElementById('search-input').value);
+  updateStats();
+
+  if (failed === 0) {
+    showToast('success', `${stopped} bot${stopped !== 1 ? 's' : ''} detenido${stopped !== 1 ? 's' : ''}`);
+  } else {
+    showToast('error', `${stopped} detenidos, ${failed} con error`);
+  }
+}
+
+// Actualizar estado habilitado/deshabilitado de los botones de parar todos
+function updateStopAllButtons() {
+  const hasRunning = bots.some(b => b.status === 'running');
+  document.querySelectorAll('#topbar-stop-all, #sidebar-stop-all').forEach(btn => {
+    btn.disabled = !hasRunning;
+    btn.innerHTML = '■ Parar todos';
+  });
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// PARAR TODOS LOS BOTS
+// ─────────────────────────────────────────────────────────────
+async function stopAllBots() {
+  const running = bots.filter(b => b.status === 'running');
+  if (running.length === 0) return;
+
+  const btn = document.getElementById('topbar-stop-all');
+  btn.disabled = true;
+  btn.textContent = '⏳ Parando...';
+
+  const results = await Promise.allSettled(
+    running.map(bot => apiCall('POST', `/bots/${bot.id}/stop`))
+  );
+
+  // Actualizar estado de cada bot
+  results.forEach((result, i) => {
+    const bot = running[i];
+    if (result.status === 'fulfilled') {
+      const b = bots.find(b => b.id === bot.id);
+      if (b) {
+        b.status = 'stopped';
+        b.containerId = null;
+      }
+      if (selectedBot?.id === bot.id) {
+        selectedBot.status = 'stopped';
+        renderWorkspaceStatus(selectedBot);
+        addLogLine('system', 'Contenedor detenido por el usuario');
+        stopLogPolling();
+      }
+    }
+  });
+
+  renderBotList(document.getElementById('search-input').value);
+  updateStats();
+
+  const stopped = results.filter(r => r.status === 'fulfilled').length;
+  const failed  = results.filter(r => r.status === 'rejected').length;
+
+  if (failed === 0) {
+    showToast('success', `${stopped} bot${stopped !== 1 ? 's' : ''} detenido${stopped !== 1 ? 's' : ''}`);
+  } else {
+    showToast('error', `${stopped} detenidos, ${failed} con error`);
+  }
+
+  btn.textContent = '■ Parar todos';
+}
+
+// ─────────────────────────────────────────────────────────────
+// EDITAR DESCRIPCIÓN
+// ─────────────────────────────────────────────────────────────
+var editDescBotId = null;
+
+function openEditDescModal(botId) {
+  const bot = bots.find(b => b.id === botId);
+  if (!bot) return;
+  editDescBotId = botId;
+  document.getElementById('edit-desc-input').value = bot.description || '';
+  document.getElementById('modal-edit-desc').classList.add('open');
+  setTimeout(() => document.getElementById('edit-desc-input').focus(), 200);
+}
+
+async function saveDescription() {
+  if (!editDescBotId) return;
+  const desc = document.getElementById('edit-desc-input').value.trim();
+  try {
+    const res = await fetch(`${API_BASE}/bots/${editDescBotId}/description`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: desc }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Actualizar en memoria
+    const bot = bots.find(b => b.id === editDescBotId);
+    if (bot) bot.description = desc;
+    renderBotList(document.getElementById('search-input').value);
+    closeModal('modal-edit-desc');
+    showToast('success', 'Descripción actualizada');
+  } catch (e) {
+    showToast('error', `Error al guardar: ${e.message}`);
+  }
+  editDescBotId = null;
+}
+
+// Enter para confirmar
+document.getElementById('edit-desc-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveDescription();
+});
 
 // ─────────────────────────────────────────────────────────────
 // INIT

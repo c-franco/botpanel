@@ -80,6 +80,16 @@ public class BotsController : ControllerBase
         }
     }
 
+    // ─── PATCH /api/bots/{id}/description ───────────────────
+    [HttpPatch("{id}/description")]
+    public IActionResult UpdateDescription(string id, [FromBody] UpdateDescriptionRequest request)
+    {
+        var bot = _repo.GetById(id);
+        if (bot == null) return NotFound();
+        _repo.UpdateDescription(id, request.Description ?? "");
+        return NoContent();
+    }
+
     // ─── DELETE /api/bots/{id} ───────────────────────────────
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
@@ -311,4 +321,9 @@ public class BotsController : ControllerBase
         CreatedAt = bot.CreatedAt,
         LastRun = bot.LastRun,
     };
+}
+
+public class UpdateDescriptionRequest
+{
+    public string? Description { get; set; }
 }
