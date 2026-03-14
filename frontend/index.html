@@ -3066,54 +3066,6 @@ async function stopAllBots() {
   const running = bots.filter(b => b.status === 'running');
   if (running.length === 0) return;
 
-  // Deshabilitar botones durante la operación
-    btn.disabled = true;
-    btn.textContent = '⏳ Parando...';
-  });
-
-  const results = await Promise.allSettled(
-    running.map(bot => apiCall('POST', `/bots/${bot.id}/stop`))
-  );
-
-  // Actualizar estado en memoria
-  results.forEach((result, i) => {
-    const bot = running[i];
-    if (result.status === 'fulfilled') {
-      const b = bots.find(x => x.id === bot.id);
-      if (b) { b.status = 'stopped'; b.containerId = null; }
-      updateBotStatus(bot.id, 'stopped');
-    }
-  });
-
-  const stopped = results.filter(r => r.status === 'fulfilled').length;
-  const failed  = results.filter(r => r.status === 'rejected').length;
-
-  renderBotList(document.getElementById('search-input').value);
-  updateStats();
-
-  if (failed === 0) {
-    showToast('success', `${stopped} bot${stopped !== 1 ? 's' : ''} detenido${stopped !== 1 ? 's' : ''}`);
-  } else {
-    showToast('error', `${stopped} detenidos, ${failed} con error`);
-  }
-}
-
-// Actualizar estado habilitado/deshabilitado de los botones de parar todos
-function updateStopAllButtons() {
-  const hasRunning = bots.some(b => b.status === 'running');
-    btn.disabled = !hasRunning;
-    btn.innerHTML = '■ Parar todos';
-  });
-}
-
-
-// ─────────────────────────────────────────────────────────────
-// PARAR TODOS LOS BOTS
-// ─────────────────────────────────────────────────────────────
-async function stopAllBots() {
-  const running = bots.filter(b => b.status === 'running');
-  if (running.length === 0) return;
-
   const btn = document.getElementById('topbar-stop-all');
   btn.disabled = true;
   btn.textContent = '⏳ Parando...';
@@ -3122,15 +3074,11 @@ async function stopAllBots() {
     running.map(bot => apiCall('POST', `/bots/${bot.id}/stop`))
   );
 
-  // Actualizar estado de cada bot
   results.forEach((result, i) => {
     const bot = running[i];
     if (result.status === 'fulfilled') {
       const b = bots.find(b => b.id === bot.id);
-      if (b) {
-        b.status = 'stopped';
-        b.containerId = null;
-      }
+      if (b) { b.status = 'stopped'; b.containerId = null; }
       if (selectedBot?.id === bot.id) {
         selectedBot.status = 'stopped';
         renderWorkspaceStatus(selectedBot);
