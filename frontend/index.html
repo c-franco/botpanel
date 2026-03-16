@@ -2870,6 +2870,9 @@ function switchGlobalView(view) {
   if (view === 'multiconsole') {
     mcRefresh();
   }
+
+  // Cerrar sidebar en móvil al cambiar vista
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3331,12 +3334,7 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
-// Cerrar sidebar al cambiar vista global en móvil
-const _origSwitchGlobalView = switchGlobalView;
-function switchGlobalView(view) {
-  _origSwitchGlobalView(view);
-  if (window.innerWidth <= 768) closeSidebar();
-}
+
 
 // ─────────────────────────────────────────────────────────────
 // INIT
