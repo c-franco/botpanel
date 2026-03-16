@@ -73,6 +73,7 @@ public class DockerService : IDockerService
             // Chrome low-memory flags passed as env vars — bots can read them
             // or Chrome picks them up automatically via CHROMIUM_FLAGS
             "--env PYTHONUNBUFFERED=1",
+            "--env TZ=Europe/Madrid",
             // Chrome low-memory flags are injected automatically via chrome_defaults.py in the image
             $"--volume \"{absPath}:/app:rw\"",
             "--workdir /app",
