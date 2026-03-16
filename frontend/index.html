@@ -2450,6 +2450,9 @@ async function selectBot(id) {
     startContainerInfo(bot.containerId);
     await startLogPolling(bot.id);
   }
+
+  // Cerrar sidebar en móvil al seleccionar bot
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function renderWorkspaceStatus(bot) {
@@ -3326,13 +3329,6 @@ function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.body.style.overflow = '';
-}
-
-// Cerrar sidebar al seleccionar un bot en móvil
-const _origSelectBot = selectBot;
-async function selectBot(id) {
-  await _origSelectBot(id);
-  if (window.innerWidth <= 768) closeSidebar();
 }
 
 // Cerrar sidebar al cambiar vista global en móvil
