@@ -1,6 +1,7 @@
 // ─── Controllers/BotsController.cs ───────────────────────────
 
 using BotPanel.Models;
+using BotPanel.Resources;
 using BotPanel.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -63,7 +64,7 @@ public class BotsController : ControllerBase
     public ActionResult<BotDto> Create([FromBody] CreateBotRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest(new { message = "Bot name is required." });
+            return BadRequest(new { message = AppResources.BotNameRequired });
 
         // Sanitize name
         request.Name = System.Text.RegularExpressions.Regex.Replace(
@@ -147,7 +148,7 @@ public class BotsController : ControllerBase
         if (bot == null) return NotFound();
 
         if (bot.Status == BotStatus.Running)
-            return Conflict(new { message = "Bot is already running." });
+            return Conflict(new { message = AppResources.BotAlreadyRunning });
 
         try
         {
@@ -162,13 +163,13 @@ public class BotsController : ControllerBase
             // Start streaming logs in background
             await _logStreaming.StartStreamingAsync(id, containerId, cts.Token);
 
-            _logger.LogInformation("Bot {Id} started in container {ContainerId}", id, containerId[..12]);
+            _logger.LogInformation(AppResources.StartedBot, id, containerId[..12]);
             return Ok(new { containerId });
         }
         catch (Exception ex)
         {
             _repo.UpdateStatus(id, BotStatus.Error);
-            _logger.LogError(ex, "Failed to start bot {Id}", id);
+            _logger.LogError(ex, AppResources.FailedToStartBot, id);
             return StatusCode(500, new { message = ex.Message });
         }
     }
@@ -181,7 +182,7 @@ public class BotsController : ControllerBase
         if (bot == null) return NotFound();
 
         if (bot.Status != BotStatus.Running || bot.ContainerId == null)
-            return BadRequest(new { message = "Bot is not running." });
+            return BadRequest(new { message = AppResources.BotNotRunning });
 
         try
         {
@@ -196,12 +197,12 @@ public class BotsController : ControllerBase
             await _docker.StopBotAsync(bot.ContainerId);
             _repo.UpdateStatus(id, BotStatus.Stopped, null);
 
-            _logger.LogInformation("Bot {Id} stopped", id);
+            _logger.LogInformation(AppResources.StoppedBot, id);
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to stop bot {Id}", id);
+            _logger.LogError(ex, AppResources.FailedToStopBot, id);
             return StatusCode(500, new { message = ex.Message });
         }
     }
@@ -289,7 +290,7 @@ public class BotsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get logs for bot {Id}", id);
+            _logger.LogError(ex, AppResources.FailedToGetLogs, id);
             return StatusCode(500, new { message = ex.Message });
         }
     }

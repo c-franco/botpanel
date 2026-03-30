@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BotAlreadyExists" xml:space="preserve">
+    <value>Bot '{0}' already exists.</value>
+  </data>
+  <data name="BotAlreadyRunning" xml:space="preserve">
+    <value>Bot is already running.</value>
+  </data>
+  <data name="BotNameRequired" xml:space="preserve">
+    <value>Bot name is required.</value>
+  </data>
+  <data name="BotNotFound" xml:space="preserve">
+    <value>Bot '{0}' not found.</value>
+  </data>
+  <data name="BotNotRunning" xml:space="preserve">
+    <value>Bot is not running.</value>
+  </data>
+  <data name="ContainerRemoved" xml:space="preserve">
+    <value>Container removed: {ContainerId}</value>
+  </data>
+  <data name="ContainerStarted" xml:space="preserve">
+    <value>Container started: {ContainerId}</value>
+  </data>
+  <data name="DisconnectedClient" xml:space="preserve">
+    <value>Client disconnected: {ConnectionId}</value>
+  </data>
+  <data name="DockerLogsStartFailed" xml:space="preserve">
+    <value>Failed to start docker logs</value>
+  </data>
+  <data name="DockerProcessStartFailed" xml:space="preserve">
+    <value>Failed to start docker process</value>
+  </data>
+  <data name="DockerStartFailed" xml:space="preserve">
+    <value>Failed to start container: {0}</value>
+  </data>
+  <data name="EditableFilesOnly" xml:space="preserve">
+    <value>Only bot.py and requirements.txt can be edited.</value>
+  </data>
+  <data name="FailedToGetLogs" xml:space="preserve">
+    <value>Failed to get logs for bot {Id}</value>
+  </data>
+  <data name="FailedToStartBot" xml:space="preserve">
+    <value>Failed to start bot {Id}</value>
+  </data>
+  <data name="FailedToStopBot" xml:space="preserve">
+    <value>Failed to stop bot {Id}</value>
+  </data>
+  <data name="LoadedBot" xml:space="preserve">
+    <value>Loaded bot: {Name} [{Status}]</value>
+  </data>
+  <data name="LogStreamCancelled" xml:space="preserve">
+    <value>Log stream cancelled for bot {BotId}</value>
+  </data>
+  <data name="LogStreamError" xml:space="preserve">
+    <value>Log stream error for bot {BotId}</value>
+  </data>
+  <data name="LogStreamStarting" xml:space="preserve">
+    <value>Starting log stream for bot {BotId}</value>
+  </data>
+  <data name="RecoveredBot" xml:space="preserve">
+    <value>Bot {Name} recovered — container {Id} still running</value>
+  </data>
+  <data name="StartedBot" xml:space="preserve">
+    <value>Bot {Id} started in container {ContainerId}</value>
+  </data>
+  <data name="StartingContainer" xml:space="preserve">
+    <value>Starting container: docker {Args}</value>
+  </data>
+  <data name="StoppedBot" xml:space="preserve">
+    <value>Bot {Id} stopped</value>
+  </data>
+  <data name="StoppingContainer" xml:space="preserve">
+    <value>Stopping container: {ContainerId}</value>
+  </data>
+  <data name="SubscribedClient" xml:space="preserve">
+    <value>Client {ConnectionId} subscribed to bot {BotId}</value>
+  </data>
+</root>

@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using BotPanel.Models;
+using BotPanel.Resources;
 
 namespace BotPanel.Services;
 
@@ -81,14 +82,14 @@ public class DockerService : IDockerService
             "sh -c \"pip install -r requirements.txt -q --disable-pip-version-check --root-user-action=ignore && python -u bot.py\""
         );
 
-        _logger.LogInformation("Starting container: docker {Args}", args);
+        _logger.LogInformation(AppResources.StartingContainer, args);
 
         var result = await RunDockerCommand(args, ct);
         if (result.ExitCode != 0)
-            throw new InvalidOperationException($"Failed to start container: {result.Stderr}");
+            throw new InvalidOperationException(AppResources.Format(AppResources.DockerStartFailed, result.Stderr));
 
         var containerId = result.Stdout.Trim();
-        _logger.LogInformation("Container started: {ContainerId}", containerId[..12]);
+        _logger.LogInformation(AppResources.ContainerStarted, containerId[..12]);
         return containerId;
     }
 
@@ -97,10 +98,10 @@ public class DockerService : IDockerService
     /// </summary>
     public async Task StopBotAsync(string containerId, CancellationToken ct = default)
     {
-        _logger.LogInformation("Stopping container: {ContainerId}", containerId[..12]);
+        _logger.LogInformation(AppResources.StoppingContainer, containerId[..12]);
         await RunDockerCommand($"stop --time 5 {containerId}", ct);
         await RunDockerCommand($"rm -f {containerId}", ct);
-        _logger.LogInformation("Container removed: {ContainerId}", containerId[..12]);
+        _logger.LogInformation(AppResources.ContainerRemoved, containerId[..12]);
     }
 
     /// <summary>
@@ -129,7 +130,7 @@ public class DockerService : IDockerService
         };
 
         using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start docker logs");
+            ?? throw new InvalidOperationException(AppResources.DockerLogsStartFailed);
 
         var channel = System.Threading.Channels.Channel.CreateUnbounded<(string, string)>();
 
@@ -174,7 +175,7 @@ public class DockerService : IDockerService
         };
 
         using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start docker process");
+            ?? throw new InvalidOperationException(AppResources.DockerProcessStartFailed);
 
         var stdout = await process.StandardOutput.ReadToEndAsync(ct);
         var stderr = await process.StandardError.ReadToEndAsync(ct);

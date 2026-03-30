@@ -1,6 +1,7 @@
 // ─── Hubs/LogHub.cs ──────────────────────────────────────────
 
 using Microsoft.AspNetCore.SignalR;
+using BotPanel.Resources;
 
 namespace BotPanel.Hubs;
 
@@ -28,7 +29,7 @@ public class LogHub : Hub
     public async Task SubscribeToBot(string botId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, botId);
-        _logger.LogDebug("Client {ConnectionId} subscribed to bot {BotId}",
+        _logger.LogDebug(AppResources.SubscribedClient,
             Context.ConnectionId, botId);
     }
 
@@ -42,7 +43,7 @@ public class LogHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogDebug("Client disconnected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogDebug(AppResources.DisconnectedClient, Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 }

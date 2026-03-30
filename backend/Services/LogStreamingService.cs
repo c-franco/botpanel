@@ -1,6 +1,7 @@
 // ─── Services/LogStreamingService.cs ─────────────────────────
 
 using BotPanel.Hubs;
+using BotPanel.Resources;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BotPanel.Services;
@@ -43,7 +44,7 @@ public class LogStreamingService : ILogStreamingService
         {
             try
             {
-                _logger.LogInformation("Starting log stream for bot {BotId}", botId);
+                _logger.LogInformation(AppResources.LogStreamStarting, botId);
                 await foreach (var (stream, text) in _docker.StreamLogsAsync(containerId, cts.Token))
                 {
                     // Push to all clients watching this bot
@@ -57,11 +58,11 @@ public class LogStreamingService : ILogStreamingService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("Log stream cancelled for bot {BotId}", botId);
+                _logger.LogInformation(AppResources.LogStreamCancelled, botId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Log stream error for bot {BotId}", botId);
+                _logger.LogError(ex, AppResources.LogStreamError, botId);
                 await _hub.Clients.Group(botId)
                     .SendAsync("BotStatusChanged", botId, "error");
             }

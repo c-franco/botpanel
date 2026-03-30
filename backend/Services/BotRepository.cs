@@ -2,6 +2,7 @@
 
 using System.Collections.Concurrent;
 using BotPanel.Models;
+using BotPanel.Resources;
 
 namespace BotPanel.Services;
 
@@ -113,13 +114,13 @@ if __name__ == '__main__':
             {
                 bot.Status = BotStatus.Running;
                 bot.ContainerId = containerId;
-                _logger.LogInformation("Bot {Name} recovered — container {Id} still running", name, containerId[..Math.Min(12, containerId.Length)]);
+                _logger.LogInformation(AppResources.RecoveredBot, name, containerId[..Math.Min(12, containerId.Length)]);
             }
             // Note: stopped/orphaned containers are cleaned up by DockerService
             // before each new run via `docker rm -f botpanel_{botId}`
 
             _bots[bot.Id] = bot;
-            _logger.LogInformation("Loaded bot: {Name} [{Status}]", name, bot.Status);
+            _logger.LogInformation(AppResources.LoadedBot, name, bot.Status);
         }
     }
 
@@ -180,7 +181,7 @@ if __name__ == '__main__':
         var botDir = Path.Combine(_botsBasePath, id);
 
         if (Directory.Exists(botDir))
-            throw new InvalidOperationException($"Bot '{id}' already exists.");
+            throw new InvalidOperationException(AppResources.Format(AppResources.BotAlreadyExists, id));
 
         Directory.CreateDirectory(botDir);
 
@@ -240,16 +241,17 @@ if __name__ == '__main__':
 
     public string GetFilePath(string botId, string filename)
     {
-        var bot = GetById(botId) ?? throw new KeyNotFoundException($"Bot '{botId}' not found.");
+        var bot = GetById(botId) ?? throw new KeyNotFoundException(AppResources.Format(AppResources.BotNotFound, botId));
         // Only allow bot.py and requirements.txt for security
         if (filename != "bot.py" && filename != "requirements.txt")
-            throw new UnauthorizedAccessException("Only bot.py and requirements.txt can be edited.");
+            throw new UnauthorizedAccessException(AppResources.EditableFilesOnly);
         return Path.Combine(bot.DirectoryPath, filename);
     }
 
     public string GetBotDirectory(string botId)
     {
-        var bot = GetById(botId) ?? throw new KeyNotFoundException($"Bot '{botId}' not found.");
+        var bot = GetById(botId) ?? throw new KeyNotFoundException(AppResources.Format(AppResources.BotNotFound, botId));
         return bot.DirectoryPath;
     }
 }
+

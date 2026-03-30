@@ -1808,12 +1808,14 @@
 <!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 
+<script src="./app-text.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────────────────────
 const API_BASE = '/api';
 const HUB_URL = '/hubs/logs';
+const TEXT = window.BotPanelText;
 
 var bots = [];
 var selectedBot = null;
@@ -1830,6 +1832,20 @@ var signalRConnection = null;
 var uptimeInterval = null;
 var botStartTime = null;
 var cpuSimInterval = null;
+
+function getStatusCardLabel(status) {
+  return TEXT.status.card[status] || String(status || '').toUpperCase();
+}
+
+function getLogsEmptyMarkup() {
+  return `<div class="logs-empty" id="logs-empty"><span style="font-size:24px;opacity:0.3">⊡</span><span>${TEXT.logs.empty}</span></div>`;
+}
+
+function applyStaticText() {
+  document.title = TEXT.meta.title;
+}
+
+applyStaticText();
 
 // ─────────────────────────────────────────────────────────────
 // CLOCK
@@ -2300,7 +2316,7 @@ function renderBotList(filter = '') {
   );
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-muted);font-size:12px;">No se encontraron bots</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-muted);font-size:12px;">${TEXT.sidebar.noResults}</div>`;
     return;
   }
 
@@ -2312,9 +2328,9 @@ function renderBotList(filter = '') {
         <div class="bot-meta">${bot.description || 'Sin descripción'}</div>
       </div>
       <div class="bot-actions">
-        <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="Ejecutar">▶</button>
+        <button class="btn-icon" onclick="event.stopPropagation(); quickRun('${bot.id}')" title="${TEXT.sidebar.quickRunTitle}">▶</button>
         <button class="btn-icon" onclick="event.stopPropagation(); openEditDescModal('${bot.id}')" title="Editar descripción">✎</button>
-        <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="Eliminar">✕</button>
+        <button class="btn-icon danger" onclick="event.stopPropagation(); openDeleteModal('${bot.id}')" title="${TEXT.sidebar.deleteTitle}">✕</button>
       </div>
     </div>
   `).join('');
@@ -2426,7 +2442,7 @@ function renderWorkspaceStatus(bot) {
     startContainerInfo(bot.containerId);
   } else if (bot.status === 'error') {
     badge.classList.add('badge-error');
-    badge.textContent = 'ERROR';
+    badge.textContent = TEXT.workspace.activeError;
     btnRun.classList.remove('hidden');
     btnStop.classList.add('hidden');
     btnRestart.disabled = false;
@@ -2434,7 +2450,7 @@ function renderWorkspaceStatus(bot) {
     stopContainerInfo();
   } else {
     badge.classList.add('badge-stopped');
-    badge.textContent = 'DETENIDO';
+    badge.textContent = TEXT.workspace.activeStopped;
     btnRun.classList.remove('hidden');
     btnStop.classList.add('hidden');
     btnRestart.disabled = true;
@@ -2525,16 +2541,16 @@ async function saveCurrentFile() {
     savedContents[currentFile] = fileContents[currentFile];
     updateSaveIndicator(false);
     markFileTabModified(currentFile, false);
-    showToast('success', `${currentFile} guardado`);
+    showToast('success', TEXT.messages.fileSaved(currentFile));
   } catch (e) {
-    showToast('error', `Error al guardar: ${e.message}`);
+    showToast('error', TEXT.messages.saveError(e.message));
     console.error('Save error:', e);
   }
 }
 
 function updateSaveIndicator(unsaved) {
   const el = document.getElementById('save-indicator');
-  el.textContent = unsaved ? 'Cambios sin guardar' : 'Guardado';
+  el.textContent = unsaved ? TEXT.workspace.unsaved : TEXT.workspace.saved;
   el.className = unsaved ? 'save-indicator unsaved' : 'save-indicator';
 }
 
@@ -2567,7 +2583,7 @@ async function runBot() {
     renderWorkspaceStatus(bot);
     renderBotList(document.getElementById('search-input').value);
     updateStats();
-    addLogLine('system', `Contenedor iniciado: ${bot.containerId}`);
+    addLogLine('system', TEXT.messages.containerStarted(bot.containerId));
     await startLogPolling(bot.id);
     if (currentTab === 'editor') switchTab('logs');
   }
@@ -2584,7 +2600,7 @@ async function stopBot() {
     renderWorkspaceStatus(bot);
     renderBotList(document.getElementById('search-input').value);
     updateStats();
-    addLogLine('system', 'Contenedor detenido por el usuario');
+    addLogLine('system', TEXT.messages.containerStoppedByUser);
     await stopLogPolling();
   }
 }
@@ -2685,8 +2701,8 @@ async function createBot() {
   const desc = document.getElementById('new-bot-desc').value.trim();
   const template = document.getElementById('new-bot-template').value;
 
-  if (!name) { showToast('error', 'El nombre del bot es obligatorio'); return; }
-  if (bots.find(b => b.name === name)) { showToast('error', 'Ya existe un bot con ese nombre'); return; }
+  if (!name) { showToast('error', TEXT.messages.nameRequired); return; }
+  if (bots.find(b => b.name === name)) { showToast('error', TEXT.messages.duplicateName); return; }
 
   const bot = await apiCall('POST', '/bots', { name, description: desc, template });
   if (bot) {
@@ -2694,7 +2710,7 @@ async function createBot() {
     renderBotList();
     updateStats();
     closeModal('modal-new-bot');
-    showToast('success', `Bot "${name}" creado`);
+    showToast('success', TEXT.messages.botCreated(name));
     selectBot(bot.id);
   }
 }
@@ -2723,7 +2739,7 @@ async function confirmDelete() {
   closeModal('modal-delete');
   renderBotList();
   updateStats();
-  showToast('success', 'Bot eliminado');
+  showToast('success', TEXT.messages.botDeleted);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3004,7 +3020,7 @@ function mcCreateCard(bot) {
     <div class="card-titlebar">
       <div class="card-dot ${bot.status}" id="mc-dot-${bot.id}"></div>
       <div class="card-name">${escapeHtml(bot.name)}</div>
-      <span class="card-status-text ${bot.status}" id="mc-status-${bot.id}">${bot.status.toUpperCase()}</span>
+      <span class="card-status-text ${bot.status}" id="mc-status-${bot.id}">${getStatusCardLabel(bot.status)}</span>
       <button class="card-btn-go" onclick="switchGlobalView('bots'); selectBot('${bot.id}')">
         ↗ Abrir
       </button>
@@ -3012,13 +3028,13 @@ function mcCreateCard(bot) {
     <div class="card-console" id="mc-console-${bot.id}">
       <div class="card-empty" id="mc-empty-${bot.id}">
         <span style="opacity:0.3;font-size:20px">⊡</span>
-        <span>${bot.status === 'running' ? 'Conectando...' : 'Bot detenido'}</span>
+        <span>${bot.status === 'running' ? TEXT.multiConsole.connecting : TEXT.multiConsole.botStopped}</span>
       </div>
     </div>
     <div class="card-footer">
       <span class="card-footer-stat">Líneas: <span id="mc-linecount-${bot.id}">0</span></span>
-      <span class="card-footer-stat" id="mc-container-${bot.id}">${bot.containerId ? 'Contenedor: ' + bot.containerId : ''}</span>
-      <button class="card-btn-clear" onclick="mcClearCard('${bot.id}')">Limpiar</button>
+      <span class="card-footer-stat" id="mc-container-${bot.id}">${bot.containerId ? TEXT.multiConsole.containerLabel + ': ' + bot.containerId : ''}</span>
+      <button class="card-btn-clear" onclick="mcClearCard('${bot.id}')">${TEXT.multiConsole.clear}</button>
     </div>
   `;
 
@@ -3052,7 +3068,7 @@ function mcUpdateCardStatus(botId, status) {
   if (dot) { dot.className = `card-dot ${status}`; }
   if (statusEl) {
     statusEl.className = `card-status-text ${status}`;
-    statusEl.textContent = status.toUpperCase();
+    statusEl.textContent = getStatusCardLabel(status);
   }
 
   // If now running and not subscribed yet, subscribe
@@ -3118,7 +3134,7 @@ function mcClearCard(botId) {
     consoleEl.innerHTML = `
       <div class="card-empty" id="mc-empty-${botId}">
         <span style="opacity:0.3;font-size:20px">⊡</span>
-        <span>Limpiado</span>
+        <span>${TEXT.multiConsole.cleared}</span>
       </div>`;
   }
   const countEl = document.getElementById(`mc-linecount-${botId}`);
@@ -3185,7 +3201,7 @@ async function stopAllBots() {
       if (selectedBot?.id === bot.id) {
         selectedBot.status = 'stopped';
         renderWorkspaceStatus(selectedBot);
-        addLogLine('system', 'Contenedor detenido por el usuario');
+        addLogLine('system', TEXT.messages.containerStoppedByUser);
         stopLogPolling();
       }
     }
@@ -3198,9 +3214,9 @@ async function stopAllBots() {
   const failed  = results.filter(r => r.status === 'rejected').length;
 
   if (failed === 0) {
-    showToast('success', `${stopped} bot${stopped !== 1 ? 's' : ''} detenido${stopped !== 1 ? 's' : ''}`);
+    showToast('success', TEXT.messages.stopAllSuccess(stopped));
   } else {
-    showToast('error', `${stopped} detenidos, ${failed} con error`);
+    showToast('error', TEXT.messages.stopAllPartial(stopped, failed));
   }
 
   btn.textContent = '■ Parar todos';
@@ -3237,7 +3253,7 @@ async function saveDescription() {
     closeModal('modal-edit-desc');
     showToast('success', 'Descripción actualizada');
   } catch (e) {
-    showToast('error', `Error al guardar: ${e.message}`);
+    showToast('error', TEXT.messages.saveError(e.message));
   }
   editDescBotId = null;
 }
@@ -3279,3 +3295,4 @@ connectSignalR();
 </script>
 </body>
 </html>
+
