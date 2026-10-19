@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>🤖 Bot Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -1548,12 +1548,13 @@
     body::after { position: fixed; }
 
   </style>
+  <link rel="stylesheet" href="mobile.css" />
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Menú">☰</button>
+  <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Menú" aria-expanded="false" aria-controls="bot-sidebar">☰</button>
   <div class="topbar-logo">BotPanel</div>
   <div class="topbar-sep"></div>
   <div class="topbar-status">
@@ -1596,12 +1597,13 @@
 <div class="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="bot-sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title">Bots</span>
       <button class="btn-new" onclick="openNewBotModal()">
         <span>+</span> Nuevo Bot
       </button>
+      <button class="btn-drawer-close" onclick="closeSidebar()" aria-label="Cerrar menú">&times;</button>
     </div>
     <div class="search-box">
       <input class="search-input" type="text" placeholder="Buscar bots..." id="search-input" oninput="filterBots(this.value)">
@@ -1617,6 +1619,7 @@
       <div class="empty-icon">⬡</div>
       <div class="empty-title">Ningún bot seleccionado</div>
       <div class="empty-sub">Selecciona un bot del panel lateral o crea uno nuevo</div>
+      <button class="mobile-empty-action" onclick="openSidebar()">Ver bots</button>
     </div>
 
     <!-- WORKSPACE -->
@@ -3268,6 +3271,11 @@ document.getElementById('edit-desc-input').addEventListener('keydown', e => {
 // SIDEBAR DRAWER (móvil)
 // ─────────────────────────────────────────────────────────────
 function toggleSidebar() {
+  if (window.innerWidth <= 768 && currentGlobalView !== 'bots') {
+    switchGlobalView('bots');
+    openSidebar();
+    return;
+  }
   const sidebar  = document.querySelector('.sidebar');
   const overlay  = document.getElementById('sidebar-overlay');
   const isOpen   = sidebar.classList.contains('open');
@@ -3277,14 +3285,24 @@ function toggleSidebar() {
 function openSidebar() {
   document.querySelector('.sidebar').classList.add('open');
   document.getElementById('sidebar-overlay').classList.add('open');
+  document.getElementById('btn-hamburger').setAttribute('aria-expanded', 'true');
   document.body.style.overflow = 'hidden';
 }
 
 function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
+  document.getElementById('btn-hamburger').setAttribute('aria-expanded', 'false');
   document.body.style.overflow = '';
 }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
+});
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768 && document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
+});
 
 
 

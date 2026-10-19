@@ -1,0 +1,11 @@
+# Python bytecode and cache directories
+__pycache__/
+*.py[cod]
+
+# Local bot scripts
+/backend/script.py
+/backend/script-old.py
+
+# .NET build output for this project
+/backend/bin/
+/backend/obj/
